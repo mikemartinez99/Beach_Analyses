@@ -705,6 +705,8 @@ Volcano <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = Groups)
   geom_hline(yintercept = -log10(significance_threshold), linetype = "dashed", color = "black") +
   geom_vline(xintercept = fc_threshold*-1, linetype = "dashed", color = "black") +
   geom_vline(xintercept = fc_threshold, linetype = "dashed", color = "black") +
+  scale_x_continuous(breaks = c(-10, -5, -1, 0, 1, 5),  # Specify only the breaks you want
+                     limits = c(-10, 6)) +
   labs(x = "Log2 Fold Change",
        y = "-log10(padj)") +
   theme_classic() +
@@ -717,7 +719,6 @@ Volcano <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = Groups)
 ggsave("Outputs/010_TCombo_vs_TControl_Outputs/CustomFigures/TCombo_vs_TControl_VolcanoPlot.tiff", Volcano, dpi = 300, width = 10, height = 10)
 
 
-# Summations
-sum(res$log2FoldChange < -1 & res$padj < 0.05)
+
 
 
