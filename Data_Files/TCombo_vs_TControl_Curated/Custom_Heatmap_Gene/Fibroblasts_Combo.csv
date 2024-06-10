@@ -1,0 +1,21 @@
+Genes,Specific Cell
+Dcn,Fibroblast
+Pdgfra,Fibroblast
+S100a4,Fibroblast
+Vim,Fibroblast
+Acta2,Myofibroblast
+Grem2,Myofibroblast
+Myh11,Myofibroblast
+Tagln,Myofibroblast
+Cnn1,ECM fibroblast
+Col6a6,ECM fibroblast
+Col14a1,ECM fibroblast
+Myl9,ECM fibroblast
+Ogn,ECM fibroblast
+Tpm2,ECM fibroblast
+Csf3,Inflammatory CAF
+Cxcl2,Inflammatory CAF
+Il1a,Inflammatory CAF
+Il1b,Inflammatory CAF
+Mmp9,Inflammatory CAF
+Ptgs2,Inflammatory CAF

@@ -1,0 +1,23 @@
+Genes,Pathway
+Nos2,ROS generating
+Duox2,ROS generating
+Noxo1,ROS generating
+Cxcl1,Immune cell recruitment
+Cxcl3,Immune cell recruitment
+Cxcl6,Immune cell recruitment
+Socs3,Immune Suppressive
+Lag3,Immune Suppressive
+Il10,Immune Suppressive
+Il17a,Tumor promoting cytokines
+Il17c,Tumor promoting cytokines
+Il22,Tumor promoting cytokines
+Il23a,Tumor promoting cytokines
+C3,Innate immune activation
+Serpinb3a,Innate immune activation
+Reg3b,Innate immune activation
+Reg3g,Innate immune activation
+S100a8,Innate immune activation
+S100a9,Innate immune activation
+Cfi,Innate immune activation
+Tnf,Innate immune activation
+Sting1,Innate immune activation
