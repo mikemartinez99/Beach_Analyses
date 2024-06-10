@@ -10,27 +10,28 @@ Code used to generate a PCA plot of all tumor samples and a PCA plot of all norm
 # 003_NControl_vs_WT.R
 Analyses to compare normal control Pirc tissue relative to WT rats
 
-# 004_NNaproxen_vs_NControl.R
-Analyses to compare normal tissue from  naproxen-treated Pirc rats relatve to normal tissue of non-treated pirc rats
+# 004 - 006
+The following set of comparisons are all from normal pirc rat colon tissue.
+Script 004_NNaproxen_vs_NControl compares naproxen treated Pirc rat relative-to non-treated Pirc rat
+Script 005_NEPA_vs_NControl compares EPA treated Pirc rat relative-to non-treated pirc rat
+Script 006_NCombo_vs_NControl compares combination (Naproxen + EPA) treated Pirc rat relative-to non-treated Pirc rat
 
-# 005_NEPA_vs_NControl.R
-Analyses to compare normal tissue from  EPA-treated Pirc rats relatve to normal tissue of non-treated pirc rats
+# 007-012
+The following set of comparisons are all from tumor pirc rat colon tissues (except for 007 which is tumor vs normal)
+Script 007_TControl_vs_NControl compares non-treated Pirc rat tumor tissue relative to non-treated Pirc rat normal tissue.
+Script 008_TNaproxen_vs_TControl compares naproxen-treated Pirc rat tumor tissue relative-to non-treated Pirc rat tumor tissue.
+Script 009_TEPA_vs_TControl compares EPA-treated Pirc rat tumor tissue relative-to non-treated Pirc rat tumor tissue.
+Script 010_TCombo_vs_TControl compares combination-treated (Naproxen + EPA) Pirc rat tumor tissue relative-to non-treated Pirc rat tumor tissue.
+Script 011_TTP252_vs_TControl compares TP252-treated Pirc rat tumor tissue relative-to non-treated Pirc rat tumor tissue.
+Script 012_TTP252_Naproxen_vs_TControl compares TP252 + Naproxen-treated Pirc rat tumor tissue relative-to non-treated Pirc rat tumor tissue.
 
-# 006_NCombo_vs_NControl.R
-Analyses to compare normal tissue from  Combination-treated Pirc rats relatve to normal tissue of non-treated pirc rats
+# 013_GSEA_Cluster_Comparison.R
+This script makes use of clusterProfilers cluster comparison methods to examine changes in KEGG terms across treatment groups.
 
-# 007_TControl_vs_NControl.R
-Analyses to compare tumor tissue from non-treated Pirc rats relative to normal tissue of non-treatmed pirc rats to asssess gene changes in tumorgenesis. 
+# 014_Ifetroban_vs_All.R
+This comparison is for the Ifetroban project and compares Ifetroban-treated Pirc Rat tumor tissue relative to non-treated Pirc rat tumor tissue.
 
-# 008_TNaproxen_vs_TControl
-Tumor counterpart of script 004
 
-# 009_TEPA_vs_TControl
-Tumor counterpart of script 005
-
-# 010_TCombo_vs_TControl
-Tumor counterpart of script 006
-Customized code to generated log10 TPM heatmaps
 
 
 
