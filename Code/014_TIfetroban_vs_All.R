@@ -42,11 +42,19 @@ if (!dir.exists(figPath)) {
   dir.create(figPath)
 }
 
+# Set up output directory architecture for GSEA
+gseaPath <- "Outputs/014_TIfetroban_vs_All_Outputs/GSEA"
+if (!dir.exists(gseaPath)) {
+  dir.create(gseaPath)
+}
+
 # Set up output directory architecture Ifetroban data
 dataPath <- "Data_Files/Ifetroban_Study"
 if (!dir.exists(dataPath)) {
   dir.create(dataPath)
 }
+
+
 
 ################################################################################
 
@@ -143,6 +151,149 @@ results005top$Significance <- ifelse(results005top$padj <= 0.001, "p < 0.001", "
 
 # Save as csv
 write.csv(results005top, file = "Outputs/014_TIfetroban_vs_All_Outputs/DESeq2/TIfetroban_vs_TControl_Top_DEGs_Tabular.csv")
+
+################################################################################
+
+# Prepare data for GSEA
+# Extract Ensembl IDs
+rownames(results) <- results$Row.names
+results$Row.names <- NULL
+results$Ensembl <- gsub("^(.*?) - .*", "\\1", rownames(results))
+
+# Map Entrez IDs to Ensembl IDs
+results$Entrez <- mapIds(org.Rn.eg.db, key = results$Ensembl,
+                         column = "ENTREZID", keytype = "ENSEMBL",
+                         multiVals = "first")
+
+# Order the genes and remove NA values
+results <- results[order(results$log2FoldChange, decreasing = TRUE),]
+results <- na.omit(results)
+
+# Get a vector of fold changes and name them by their Entrez ID
+genes <- results$log2FoldChange
+names(genes) <- results$Entrez
+
+# Remove any duplicate Entrez IDs and for sanity, order in decreasing order again
+unique_entrez_genes <- names(genes[!duplicated(names(genes))])
+unique_genes <- genes[unique_entrez_genes]
+unique_genes <- sort(unique_genes, decreasing = TRUE)
+
+# Check how many genes there are
+length(unique_genes)
+
+# Save the named list as a GSEA input
+GSEA_input <- as.data.frame(unique_genes)
+GSEA_input$Entrez <- rownames(GSEA_input)
+GSEA_input$Ensembl <- mapIds(org.Rn.eg.db, key = GSEA_input$Entrez,
+                             column = "ENSEMBL", keytype = "ENTREZID",
+                             multiVals = "first")
+GSEA_input$Symbols <- mapIds(org.Rn.eg.db, key = GSEA_input$Ensembl,
+                             column = "SYMBOL", keytype = "ENSEMBL",
+                             multiVals = "first")
+write.csv(GSEA_input, file = "Outputs/014_TIfetroban_vs_All_Outputs/GSEA/TIfetroban_vs_TControl_GSEA_Input_List.csv")
+
+
+# Set seed for reproducibility
+set.seed(1234)
+
+# Run GSEA for GO terms
+GO <- gseGO(unique_genes,
+            ont = "all",
+            OrgDb = "org.Rn.eg.db",
+            pvalueCutoff = 0.05,
+            pAdjustMethod = "BH",
+            eps = 1e-300,
+            verbose = TRUE,
+            by = "fgsea",
+            seed = TRUE)
+GO.simp <- clusterProfiler::simplify(GO, cutoff = 0.6, by = "p.adjust", select_fun = min)
+
+# Save Rds
+saveRDS(GO.simp, file = "Outputs/014_TIfetroban_vs_All_Outputs/Rds_Files/TIfetroban_vs_TControl_Simplified_gseGO.rds")
+
+# Save gseGO results as a dataframe
+GO.df <- as.data.frame(setReadable(GO.simp, org.Rn.eg.db, "ENTREZID"))
+write.csv(GO.df, file = "Outputs/014_TIfetroban_vs_All_Outputs/GSEA/TIfetroban_vs_TControl_Simplified_gseGO.csv")
+
+# Now do GSEA for KEGG terms
+# Set seed for reproductibility
+set.seed(1234)
+
+# Run GSEA for KEGG terms
+KEGG <- gseKEGG(unique_genes,
+                organism = "rno",
+                keyType = "kegg",
+                pvalueCutoff = 0.05,
+                pAdjustMethod = "BH",
+                eps = 1e-300,
+                verbose = TRUE,
+                by = "fgsea",
+                seed = TRUE)
+
+# Save Rds
+saveRDS(KEGG, file = "Outputs/014_TIfetroban_vs_All_Outputs/Rds_Files/TIfetroban_vs_TControl_gseKEGG.rds")
+
+# Save gseGO results as a dataframe
+KEGG.df <- as.data.frame(setReadable(KEGG, org.Rn.eg.db, "ENTREZID"))
+write.csv(KEGG.df, file = "Outputs/014_TIfetroban_vs_All_Outputs/GSEA/TIfetroban_vs_TControl_gseKEGG.csv")
+
+################################################################################
+# Curated GSEA figures
+# Read in the curated GO and KEGG results
+curGO <- read.csv("Data_Files/Ifetroban_Study/TIfetroban_vs_TControl_Curated/Curated_GSEA/TIfetroban_vs_Control_Curated_GO.csv")
+curKEGG <- read.csv("Data_Files/Ifetroban_Study/TIfetroban_vs_TControl_Curated/Curated_GSEA/TIfetroban_vs_TControl_Curated_KEGG.csv")
+
+# Function to format the dataframe
+formatGSEA <- function(x, reference, treatment) {
+  formatted <- x %>%
+    mutate(enrichment = ifelse(enrichmentScore > 0, paste("Enriched in", treatment, sep = " "), paste("Enriched in", reference, sep = " "))) %>%
+    mutate(GeneRatio = length(strsplit(as.character(core_enrichment), "/")) / setSize) %>%
+    mutate(enrichment = factor(enrichment, levels = c(paste("Enriched in", reference, sep = " "), paste("Enriched in", treatment, sep = " ")))) %>%
+    arrange(enrichmentScore) 
+  
+  return(formatted)
+}
+
+# Format the dataframes and set factors
+curGO <- formatGSEA(curGO, "Control", "Ifetroban")
+curGO$Description <- factor(curGO$Description, levels = curGO$Description)
+
+curKEGG <- formatGSEA(curKEGG, "Control", "Ifetroban")
+curKEGG$Description <- factor(curKEGG$Description, levels = curKEGG$Description)
+
+# Function to plot dotplot
+plotDot <- function(df) {
+  plot <- ggplot(df, aes(x = enrichmentScore, y = Description, color = p.adjust)) +
+    geom_point(aes(size = setSize),alpha = 0.8) +
+    scale_color_continuous(low = "red", high = "blue") +
+    scale_size(range = c(4,10)) +
+    facet_grid(~enrichment, scales = "free") +
+    xlab("Enrichment Score") +
+    theme(axis.text.y = element_text(size = 9)) +
+    labs(x = "Enrichment Score",
+         y = "") +
+    theme_bw() +
+    theme(axis.text.x = element_text(size = 10, angle = 90),
+          axis.title.x = element_text(size = 16),
+          axis.text.y = element_text(size = 18),
+          strip.text = element_text(size = 14, face = "bold"),
+          title= element_text(size = 20),
+          legend.text = element_text(size = 12)) 
+  return(plot)
+}
+
+# Set up output directory for custom GSEA plots
+customGSEAplots <- "Outputs/014_TIfetroban_vs_All_Outputs/CustomFigures/Custom_GSEA"
+if (!dir.exists(customGSEAplots)) {
+  dir.create(customGSEAplots)
+}
+
+# Plot dotplots
+GOdotplot <- plotDot(curGO)
+ggsave("Outputs/014_TIfetroban_vs_All_Outputs/CustomFigures/Custom_GSEA/TCombo_vs_TControl_Curated_GO_dotplot.tiff", GOdotplot, width = 14, height = 10, dpi = 300)
+
+KEGGdotplot <- plotDot(curKEGG)
+ggsave("Outputs/014_TIfetroban_vs_All_Outputs/CustomFigures/Custom_GSEA/TCombo_Vs_TControl_Curated_KEGG_dotplot.tiff", KEGGdotplot, width = 14, height = 10, dpi = 300)
 
 ################################################################################
 
@@ -483,14 +634,7 @@ tiff("Outputs/014_TIfetroban_vs_All_Outputs/CustomFigures/Ifetroban_Immune_Curat
 draw(immuneScaled)
 dev.off()
 
-
-
-
-
-
-
-
-
+################################################################################
 
 
 
