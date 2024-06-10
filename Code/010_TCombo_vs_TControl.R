@@ -358,6 +358,11 @@ if (!dir.exists(curatedDataDir)){
 write.csv(logTPM, file = "Data_Files/TCombo_vs_TControl_Curated/Log10_TPM_Values/TCombo_vs_TControl_Log10_TPM_Values.csv")
 
 ################################################################################
+# Set up stats directory
+statsDir <- "Outputs/010_TCombo_vs_TControl_Outputs/CustomFigures/Curated_Heatmaps/Heatmap_Statistics/"
+if (!dir.exists(statsDir)){
+  dir.create(statsDir)
+}
 
 # Fibroblast Heatmap
 fibroblasts <- read.csv("Data_Files/TCombo_vs_TControl_Curated/Custom_Heatmap_Gene/Fibroblasts_Combo.csv")
@@ -372,6 +377,17 @@ fibroblasts <- fibroblasts %>%
 
 # Get a list of genes we want to keep
 fibroGenes <- rownames(fibroblasts)
+
+
+# Get associated stats
+res <- read.csv("Outputs/010_TCombo_vs_TControl_Outputs/DESeq2/TCombo_vs_TControl_dds_results.csv")
+rownames(res) <- res$X
+res$X <- NULL
+res$Symbols <- trimws(res$Symbols)
+res.filt <- res[res$Symbols %in% fibroGenes,]
+rownames(res.filt) <- res.filt$Symbols
+res.filt <- res.filt[fibroGenes,]
+write.csv(res.filt, file = "Outputs/010_TCombo_vs_TControl_Outputs/CustomFigures/Curated_Heatmaps/Heatmap_Statistics/Fibroblast_Stats_Combo.csv")
 
 # Isolate these genes from the logTPM dataframe
 fibroCounts <- logTPM[logTPM$Symbols %in% fibroGenes,]
@@ -460,6 +476,17 @@ immune <- immune %>%
 # Get a list of genes we want to keep
 immuneGenes <- rownames(immune)
 
+# Get associated stats
+res <- read.csv("Outputs/010_TCombo_vs_TControl_Outputs/DESeq2/TCombo_vs_TControl_dds_results.csv")
+rownames(res) <- res$X
+res$X <- NULL
+res$Symbols <- trimws(res$Symbols)
+res.filt <- res[res$Symbols %in% immuneGenes,]
+rownames(res.filt) <- res.filt$Symbols
+res.filt <- res.filt[immuneGenes,]
+write.csv(res.filt, file = "Outputs/010_TCombo_vs_TControl_Outputs/CustomFigures/Curated_Heatmaps/Heatmap_Statistics/Immune_Stats_Combo.csv")
+
+
 # Isolate these genes from the logTPM dataframe
 immuneCounts <- logTPM[logTPM$Symbols %in% immuneGenes,]
 rownames(immuneCounts) <- immuneCounts$Symbols
@@ -540,6 +567,17 @@ differ <- differ %>%
 
 # Specify the elements to keep
 differGenes <- rownames(differ)
+
+# Get associated stats
+res <- read.csv("Outputs/010_TCombo_vs_TControl_Outputs/DESeq2/TCombo_vs_TControl_dds_results.csv")
+rownames(res) <- res$X
+res$X <- NULL
+res$Symbols <- trimws(res$Symbols)
+res.filt <- res[res$Symbols %in% differGenes,]
+rownames(res.filt) <- res.filt$Symbols
+res.filt <- res.filt[differGenes,]
+write.csv(res.filt, file = "Outputs/010_TCombo_vs_TControl_Outputs/CustomFigures/Curated_Heatmaps/Heatmap_Statistics/Differ_Stats_Combo.csv")
+
 
 # Isolate these genes from the logTPM dataframe
 differCounts <- logTPM[logTPM$Symbols %in% differGenes,]

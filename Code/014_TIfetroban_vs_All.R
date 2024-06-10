@@ -240,7 +240,7 @@ write.csv(KEGG.df, file = "Outputs/014_TIfetroban_vs_All_Outputs/GSEA/TIfetroban
 ################################################################################
 # Curated GSEA figures
 # Read in the curated GO and KEGG results
-curGO <- read.csv("Data_Files/Ifetroban_Study/TIfetroban_vs_TControl_Curated/Curated_GSEA/TIfetroban_vs_Control_Curated_GO.csv")
+curGO <- read.csv("Data_Files/Ifetroban_Study/TIfetroban_vs_TControl_Curated/Curated_GSEA/TIfetroban_vs_TControl_Curated_GO.csv")
 curKEGG <- read.csv("Data_Files/Ifetroban_Study/TIfetroban_vs_TControl_Curated/Curated_GSEA/TIfetroban_vs_TControl_Curated_KEGG.csv")
 
 # Function to format the dataframe
@@ -332,11 +332,19 @@ ggsave("Outputs/014_TIfetroban_vs_All_Outputs/DESeq2/TIfetroban_vs_TControl_PCA.
 
 ################################################################################
 
+# Create a directory to hold custom volcano
+volcDir <- "Outputs/014_TIfetroban_vs_All_Outputs/CustomFigures/Custom_Volcanos"
+if (!dir.exists(volcDir)) {
+  dir.create(volcDir)
+}
+
 # Read in the ifetroban vs Control results
 res <- read.csv("Outputs/014_TIfetroban_vs_All_Outputs/DESeq2/TIfetroban_vs_TControl_dds.csv")
+rownames(res) <- res$Row.names
+res$Row.names <- NULL
 
 # Get the gene symbols
-res$Symbols <- trimws(gsub("^[^-]+-(.*)$", "\\1", res$X))
+res$Symbols <- trimws(gsub("^[^-]+-(.*)$", "\\1", rownames(res)))
 
 # Set thresholds
 significance_threshold <- 0.05
@@ -367,7 +375,51 @@ Volcano <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = Groups)
         axis.title.x = element_text(size = 24),
         axis.text.y = element_text(size = 24),
         axis.title.y = element_text(size = 24))
-ggsave("Outputs/014_TIfetroban_vs_All_Outputs/CustomFigures/TIfetroban_vs_TControl_VolcanoPlot.tiff", Volcano, dpi = 300, width = 10, height = 10)
+ggsave("Outputs/014_TIfetroban_vs_All_Outputs/CustomFigures/Custom_Volcanos/TIfetroban_vs_TControl_VolcanoPlot.tiff", Volcano, dpi = 300, width = 10, height = 10)
+
+# Labelled Volcano plot
+# Order the results so we can see the top hits
+orderedResults <- res[order(res$padj, decreasing = FALSE),][1:8,]$Symbols
+orderedFCpos <- res[order(res$log2FoldChange, decreasing = TRUE),][1:8,]$Symbols
+orderedFCneg <- res[order(res$log2FoldChange, decreasing = FALSE),][1:8,]$Symbols
+
+# Make a vector of genes to label
+genesToLabel <- c(orderedResults, orderedFCpos, orderedFCneg)
+
+# Remove Tdh from the label since it is not significant
+indexRemove <- c("Tdh")
+genesToLabel <- genesToLabel[genesToLabel != indexRemove]
+indexRemove <- c("Cyp2c24")
+genesToLabel <- genesToLabel[genesToLabel != indexRemove]
+
+padj_thresh <- -log10(0.05)
+pos_fc_thresh <- 1
+neg_fc_thresh <- -1
+
+# Make custom colors for plotting
+custom_colors <- c("Enriched in Ifetroban Tumor" = "firebrick2",
+                   "Enriched in Control Tumor" = "steelblue",
+                   "padj < 0.05" = "grey",
+                   "ns" = "black")
+
+
+# Plot volcano
+Volcano <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = Groups)) +
+  geom_point() +
+  geom_text_repel(data = res[res$Symbols %in% genesToLabel,], aes(label = Symbols), nudge_y = 0.5,
+                  box.padding = unit(0.35, "lines")) +
+  geom_vline(xintercept = pos_fc_thresh, linetype = "dashed") +
+  geom_vline(xintercept = neg_fc_thresh, linetype = "dashed") +
+  geom_hline(yintercept = padj_thresh, linetype = "dashed") +
+  theme_bw() +
+  scale_color_manual(values = custom_colors) +
+  theme(legend.position = "bottom",
+        legend.text = element_text(size = 12),
+        axis.title.y = element_text(size = 20),
+        axis.text.y = element_text(size = 20),
+        axis.title.x = element_text(size = 20),
+        axis.text.x = element_text(size = 20))
+ggsave("Outputs/014_TIfetroban_vs_All_Outputs/CustomFigures/Custom_Volcanos/TIfetroban_vs_TControl_Labelled_Volcano_Plot.tiff", Volcano, width = 12, height = 12, dpi = 300)
 
 ################################################################################
 # Prepare Log10 TPM data
@@ -439,6 +491,11 @@ if (!dir.exists(statsDir)) {
 
 
 ################################################################################
+# Create a directory to hold curated heatmaps
+hmDir <- "Outputs/014_TIfetroban_vs_All_Outputs/CustomFigures/Curated_Heatmaps"
+if (!dir.exists(hmDir)) {
+  dir.create(hmDir)
+}
 
 # Read in the fibroblast heatmap genes
 fibroblasts <- read.csv("Data_Files/Ifetroban_Study/Custom_Heatmap_Gene/Ifetroban_Fibroblasts.csv")
@@ -532,7 +589,7 @@ fibroScaled <- Heatmap(fibroMat,
                        row_title = NULL,
                        row_split = rowSplit,
                        row_names_gp = gpar(fontsize = 14))
-tiff("Outputs/014_TIfetroban_vs_All_Outputs/CustomFigures/Ifetroban_Fibroblast_Curated_Heatmap.tiff", width = 8, height = 10, units = "in", res = 300)
+tiff("Outputs/014_TIfetroban_vs_All_Outputs/CustomFigures/Curated_Heatmaps/Ifetroban_Fibroblast_Curated_Heatmap.tiff", width = 8, height = 10, units = "in", res = 300)
 draw(fibroScaled)
 dev.off()
 
@@ -630,7 +687,7 @@ immuneScaled <- Heatmap(immuneMat,
                         row_title = NULL,
                         row_split = rowSplit,
                         row_names_gp = gpar(fontsize = 14))
-tiff("Outputs/014_TIfetroban_vs_All_Outputs/CustomFigures/Ifetroban_Immune_Curated_Heatmap.tiff", width = 8, height = 10, units = "in", res = 300)
+tiff("Outputs/014_TIfetroban_vs_All_Outputs/CustomFigures/Curated_Heatmaps/Ifetroban_Immune_Curated_Heatmap.tiff", width = 8, height = 10, units = "in", res = 300)
 draw(immuneScaled)
 dev.off()
 
