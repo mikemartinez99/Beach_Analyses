@@ -63,6 +63,12 @@ if (!dir.exists(rdsDir)) {
   dir.create(rdsDir)
 }
 
+# For PREVENT analyses
+keep <- c("Control", "Naproxen", "EPA", "Combo")
+tumorMeta <- tumorMeta[tumorMeta$Group %in% keep, ]
+
+# Filter the tumor counts based on the meta
+tumorCounts <- tumorCounts[,colnames(tumorCounts) %in% rownames(tumorMeta)]
 
 # Prepare the DESeq2 dataset object
 dds <- DESeqDataSetFromMatrix(countData = tumorCounts,
@@ -92,8 +98,7 @@ percentVar <- round(100* attr(PCA, "percentVar"))
 PCA$Group <- factor(PCA$Group, levels = c("Control", "Naproxen", "EPA", "Combo", "TP252", "TP252_Naproxen", "Ifetroban"))
 
 # Set custom colors
-custom_colors <- c("Control" = "#66C2A5", "Naproxen" = "#FC8D62", "EPA" = "#8DA0CB", "Combo" = "#E78AC3", 
-                   "TP252" = "red", "TP252_Naproxen" = "blue", "Ifetroban" = "purple")
+custom_colors <- c("Control" = "#66C2A5", "Naproxen" = "#FC8D62", "EPA" = "#8DA0CB", "Combo" = "#E78AC3")
 
 # Plot
 plot <- ggplot(PCA, aes(PC1, PC2, fill = Group, color = Group)) +
