@@ -5,7 +5,7 @@ Analyses for NIH PREVENT and Ifetroban projects
 Contains the code to collate htseq-generated counts tables into a cohesive counts file and perform basic library QC metrics. Data include samples derived from wild-type (WT) rats, normal and tumor tissue from Pirc rats, normal and tumor tissue from treated rats (treatment groups include the following: Naproxen, EPA, combination of Naproxen + EPA, TP252, Combination of TP252 + Naproxen, and Ifetroban.)
 
 # 002_Exploratory_PCA.R
-Code used to generate a PCA plot of all tumor samples and a PCA plot of all normal samples
+Code used to generate a PCA plot of all tumor samples (for PREVENT groups) and a PCA plot of all normal samples.
 
 # 003_NControl_vs_WT.R
 Analyses to compare normal control Pirc tissue relative to WT rats
