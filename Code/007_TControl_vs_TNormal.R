@@ -305,7 +305,7 @@ Volcano <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = Groups)
         axis.text.y = element_text(size = 24),
         axis.title.y = element_text(size = 24, face = "bold")) +
   geom_text_repel(data = subset(res, Symbols %in% genes_to_label), 
-                  aes(label = Symbols), 
+                  aes(label = Symbols, family = "Times New Roman"), 
                   nudge_y = 0.5, 
                   nudge_x = 0.5,
                   box.padding = 1,
@@ -313,8 +313,8 @@ Volcano <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = Groups)
                   segment.color = "black",
                   size = 6,
                   color = "black",
-                  fontface = 4) 
-ggsave("Outputs/007_TControl_vs_NControl_Outputs/CustomFigures/TControl_vs_NControl_Curated_VolcanoPlot.tiff", Volcano, dpi = 300, width = 10, height = 10)
+                  fontface = 2) 
+ggsave("Outputs/007_TControl_vs_NControl_Outputs/CustomFigures/TControl_vs_NControl_Curated_VolcanoPlot.tiff", Volcano, dpi = 300, width = 12, height = 12)
 
 ################################################################################
 

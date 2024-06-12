@@ -18,6 +18,8 @@ library(enrichplot)
 library(AnnotationDbi)
 library(dendextend)
 library(extrafont)
+library(ComplexHeatmap)
+library(magick)
 
 # Generate output directory
 opPath <- "Outputs/010_TCombo_vs_TControl_Outputs"
@@ -98,6 +100,9 @@ resultsNames(dds)
 # Save the DESeq2 object as an Rds file
 saveRDS(dds, file = "Outputs/010_TCombo_vs_TControl_Outputs/Rds_Files/TCombo_vs_TControl_dds.Rds")
 
+# Unhash this line if you are regenerating figures
+#dds <- readRDS("Outputs/010_TCombo_vs_TControl_Outputs/Rds_Files/TCombo_vs_TControl_dds.Rds")
+
 ################################################################################
 
 # Get the results from DESeq2
@@ -138,9 +143,9 @@ vsd <- vst(dds)
 # Run PCA and return data for custom plotting
 PCA <- plotPCA(vsd, intgroup = "Group", returnData = TRUE) 
 percentVar <- round(100* attr(PCA, "percentVar"))
-PCA$Group <- factor(PCA$Group, levels = c(treatment, reference))
+PCA$Group <- factor(PCA$Group, levels = c("Control", "Combo"))
 
-custom_colors <- c("Control" = "#66C2A5", "EPA" = "#8DA0CB")
+custom_colors <- c("Control" = "#66C2A5", "Combo" = "#E78AC3")
 
 
 # Plot PCA
@@ -150,20 +155,22 @@ plot <- ggplot(PCA, aes(PC1, PC2, fill = Group, color = Group)) +
   geom_text(size = 4, aes(label = name), hjust = 1, vjust = 1.5) +
   xlab(paste0("PC1: ",percentVar[1],"% variance")) +
   ylab(paste0("PC2: ",percentVar[2],"% variance")) + 
+  labs(color = "",
+       fill = "") +
   scale_fill_manual(values = custom_colors) +
   scale_color_manual(values = custom_colors) +
   coord_fixed() +
   theme_bw() +
-  labs(title = paste(treatment, "vs", reference, sep = " ")) +
   theme(aspect.ratio = 1) +
   theme(legend.position = "bottom") +
-  theme(axis.text.x = element_text(size = 24),
-        axis.title.x = element_text(size = 26),
+  theme(text = element_text(family = "Times New Roman"),
+        axis.text.x = element_text(size = 24),
+        axis.title.x = element_text(size = 26, face = "bold"),
         axis.text.y = element_text(size = 24),
-        axis.title.y = element_text(size = 26),
+        axis.title.y = element_text(size = 26, face = "bold"),
         legend.text = element_text(size = 24),
         title = element_text(size = 26))
-ggsave("Outputs/010_TCombo_vs_TControl_Outputs/DESeq2/TCombo_vs_TControl_PCA.tiff", plot, width = 8, height = 8, dpi = 100)
+ggsave("Outputs/010_TCombo_vs_TControl_Outputs/DESeq2/TCombo_vs_TControl_PCA.tiff", plot, width = 10, height = 10, dpi = 300)
 
 ################################################################################
 
@@ -261,13 +268,14 @@ curKEGG <- read.csv("Data_Files/TCombo_vs_TControl_Curated/Curated_GSEA/TCombo_v
 # Function to format the dataframe
 formatGSEA <- function(x, reference, treatment) {
   formatted <- x %>%
-    mutate(enrichment = ifelse(enrichmentScore > 0, paste("Enriched in", treatment, sep = " "), paste("Enriched in", reference, sep = " "))) %>%
+    mutate(enrichment = ifelse(enrichmentScore > 0, paste("Downregulated in", reference, sep = " "), paste("Upregulated in", reference, sep = " "))) %>%
     mutate(GeneRatio = length(strsplit(as.character(core_enrichment), "/")) / setSize) %>%
-    mutate(enrichment = factor(enrichment, levels = c(paste("Enriched in", reference, sep = " "), paste("Enriched in", treatment, sep = " ")))) %>%
+    mutate(enrichment = factor(enrichment, levels = c(paste("Upregulated in", reference, sep = " "), paste("Downregulated in", reference, sep = " ")))) %>%
     arrange(enrichmentScore) 
   
   return(formatted)
 }
+
 
 # Format the dataframes and set factors
 curGO <- formatGSEA(curGO, "Control", "Combo")
@@ -286,10 +294,13 @@ plotDot <- function(df) {
     xlab("Enrichment Score") +
     theme(axis.text.y = element_text(size = 9)) +
     labs(x = "Enrichment Score",
-         y = "") +
+         y = "",
+         color = "P adjust",
+         size = "Set Size") +
     theme_bw() +
-    theme(axis.text.x = element_text(size = 10, angle = 90),
-          axis.title.x = element_text(size = 16),
+    theme(text = element_text(family = "Times New Roman"),
+          axis.text.x = element_text(size = 10, angle = 90),
+          axis.title.x = element_text(size = 16, face = "bold"),
           axis.text.y = element_text(size = 18),
           strip.text = element_text(size = 14, face = "bold"),
           title= element_text(size = 20),
@@ -358,7 +369,13 @@ if (!dir.exists(curatedDataDir)){
 }
 write.csv(logTPM, file = "Data_Files/TCombo_vs_TControl_Curated/Log10_TPM_Values/TCombo_vs_TControl_Log10_TPM_Values.csv")
 
+# Unhash the following line if you are regenerating figures
+#logTPM <- read.csv("Data_Files/TCombo_vs_TControl_Curated/Log10_TPM_Values/TCombo_vs_TControl_Log10_TPM_Values.csv")
+
 ################################################################################
+# Set base font
+par(family = "Times New Roman")
+
 # Set up stats directory
 statsDir <- "Outputs/010_TCombo_vs_TControl_Outputs/CustomFigures/Curated_Heatmaps/Heatmap_Statistics/"
 if (!dir.exists(statsDir)){
@@ -392,6 +409,7 @@ write.csv(res.filt, file = "Outputs/010_TCombo_vs_TControl_Outputs/CustomFigures
 
 # Isolate these genes from the logTPM dataframe
 fibroCounts <- logTPM[logTPM$Symbols %in% fibroGenes,]
+fibroCounts$X <- NULL
 rownames(fibroCounts) <- fibroCounts$Symbols
 fibroCounts$Symbols <- NULL
 
@@ -423,11 +441,19 @@ rowSplit <- rep(1:4, c(4,4,6,6))
 #Define the number of slices in the heatmap
 slices <- n+m
 
+# Set global options for heatmaps
+ht_opt(heatmap_column_names_gp = gpar(fontfamily = "Times"), 
+       heatmap_row_names_gp = gpar(fontfamily = "Times"), 
+       heatmap_column_title_gp = gpar(fontfamily = "Times"),
+       heatmap_row_title_gp = gpar(fontfamily = "Times"),
+       legend_title_gp = gpar(fontfamily = "Times"),
+       legend_labels_gp = gpar(fontfamily = "Times"))
+
 #Create a heatmap annotation
 fibroAnno <- HeatmapAnnotation(
-  Group = anno_block(gp = gpar(fill = c("#66C2A5", "#E78AC3"), fontisze = 14, fontface = "bold"), 
+  Group = anno_block(gp = gpar(fill = c("#66C2A5", "#E78AC3"), fontisze = 14, fontface = "bold", fontfamily = "Times"), 
                      labels = c(ref, treatment),
-                     labels_gp = gpar(col = "black", fontsize = 16, fontface = 2)),
+                     labels_gp = gpar(col = "black", fontsize = 16, fontface = 2, fontfamily = "Times")),
   col = list(Group = sample_colors),
   show_annotation_name = FALSE
 )
@@ -450,6 +476,7 @@ if (!dir.exists(customHeatmapDir)) {
   dir.create(customHeatmapDir)
 }
 
+
 #Heatmap for scaled data
 fibroScaled <- Heatmap(fibroMat,
                        show_column_names = FALSE,
@@ -462,7 +489,7 @@ fibroScaled <- Heatmap(fibroMat,
                        column_title = NULL,
                        row_title = NULL,
                        row_split = rowSplit,
-                       row_names_gp = gpar(fontsize = 14))
+                       row_names_gp = gpar(fontsize = 14, fontfamily = "Times"))
 tiff("Outputs/010_TCombo_vs_TControl_Outputs/CustomFigures/Curated_Heatmaps/Fibroblast_Log10_TPM_Heatmap_Combo.tiff", width = 8, height = 10, units = "in", res = 300)
 draw(fibroScaled)
 dev.off()
@@ -490,6 +517,7 @@ write.csv(res.filt, file = "Outputs/010_TCombo_vs_TControl_Outputs/CustomFigures
 
 # Isolate these genes from the logTPM dataframe
 immuneCounts <- logTPM[logTPM$Symbols %in% immuneGenes,]
+immuneCounts$X <- NULL
 rownames(immuneCounts) <- immuneCounts$Symbols
 immuneCounts$Symbols <- NULL
 
@@ -517,11 +545,20 @@ rowSplit <- rep(1:5, c(3,3,3,4,9))
 #Define the number of slices in the heatmap
 slices <- n+m
 
+# Set global options for heatmaps
+ht_opt(heatmap_column_names_gp = gpar(fontfamily = "Times"), 
+       heatmap_row_names_gp = gpar(fontfamily = "Times"), 
+       heatmap_column_title_gp = gpar(fontfamily = "Times"),
+       heatmap_row_title_gp = gpar(fontfamily = "Times"),
+       legend_title_gp = gpar(fontfamily = "Times"),
+       legend_labels_gp = gpar(fontfamily = "Times"))
+
+
 #Create a heatmap annotation
 immuneAnno <- HeatmapAnnotation(
-  Group = anno_block(gp = gpar(fill = c("#66C2A5", "#E78AC3"), fontisze = 14, fontface = "bold"), 
+  Group = anno_block(gp = gpar(fill = c("#66C2A5", "#E78AC3"), fontisze = 14, fontface = "bold", fontfamily = "Times"), 
                      labels = c(ref, treatment),
-                     labels_gp = gpar(col = "black", fontsize = 16, fontface = 2)),
+                     labels_gp = gpar(col = "black", fontsize = 16, fontface = 2, fontfamily = "Times")),
   col = list(Group = sample_colors),
   show_annotation_name = FALSE
 )
@@ -553,7 +590,7 @@ immuneScaled <- Heatmap(immuneMat,
                         left_annotation = immuneGroupAnno,
                         column_split = hmSplit,
                         row_split = rowSplit,
-                        row_names_gp = gpar(fontsize = 14))
+                        row_names_gp = gpar(fontsize = 14, fontfamily = "Times"))
 tiff("Outputs/010_TCombo_vs_TControl_Outputs/CustomFigures/Curated_Heatmaps/Immune_Log10_TPM_Heatmap_Combo.tiff", width = 8, height = 10, units = "in", res = 300)
 draw(immuneScaled)
 dev.off()
@@ -582,6 +619,7 @@ write.csv(res.filt, file = "Outputs/010_TCombo_vs_TControl_Outputs/CustomFigures
 
 # Isolate these genes from the logTPM dataframe
 differCounts <- logTPM[logTPM$Symbols %in% differGenes,]
+differCounts$X <- NULL
 rownames(differCounts) <- differCounts$Symbols
 differCounts$Symbols <- NULL
 
@@ -609,11 +647,19 @@ rowSplit <- rep(1:5, c(4,4,3,4,4))
 #Define the number of slices in the heatmap
 slices <- n+m
 
+# Set global options for heatmaps
+ht_opt(heatmap_column_names_gp = gpar(fontfamily = "Times"), 
+       heatmap_row_names_gp = gpar(fontfamily = "Times"), 
+       heatmap_column_title_gp = gpar(fontfamily = "Times"),
+       heatmap_row_title_gp = gpar(fontfamily = "Times"),
+       legend_title_gp = gpar(fontfamily = "Times"),
+       legend_labels_gp = gpar(fontfamily = "Times"))
+
 #Create a heatmap annotation
 differAnno <- HeatmapAnnotation(
-  Group = anno_block(gp = gpar(fill = c("#66C2A5", "#E78AC3"), fontisze = 14, fontface = "bold"), 
+  Group = anno_block(gp = gpar(fill = c("#66C2A5", "#E78AC3"), fontisze = 14, fontface = "bold", fontfamily = "Times"), 
                      labels = c(ref, treatment),
-                     labels_gp = gpar(col = "black", fontsize = 16, fontface = 2)),
+                     labels_gp = gpar(col = "black", fontsize = 16, fontface = 2, fontfamily = "Times")),
   col = list(Group = sample_colors),
   show_annotation_name = FALSE
 )
@@ -646,11 +692,12 @@ differScaled <- Heatmap(differMat,
                         left_annotation = differGroupAnno,
                         column_split = hmSplit,
                         row_split = rowSplit,
-                        row_names_gp = gpar(fontsize = 14))
+                        row_names_gp = gpar(fontsize = 14, fontfamily = "Times"))
 tiff("Outputs/010_TCombo_vs_TControl_Outputs/CustomFigures/Curated_Heatmaps/CellFate_Log10_TPM_Heatmap_Combo.tiff", width = 8, height = 10, units = "in", res = 300)
 draw(differScaled)
 dev.off()
 
+################################################################################
 
 # Read in the deseq2 output file from this run
 res <- read.csv("Outputs/007_TControl_vs_NControl_Outputs/DESeq2/TControl_vs_NControl_dds_results.csv", header = TRUE, sep = ",")
@@ -710,13 +757,13 @@ Volcano <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = Groups)
   labs(x = "Log2 Fold Change",
        y = "-log10(padj)") +
   theme_classic() +
-  theme(legend.position = "bottom",
-        text = element_text(family = "Times New Roman"),
+  theme(text = element_text(family = "Times New Roman"),
+        legend.position = "bottom",
         legend.text = element_text(size = 18),
         axis.text.x = element_text(size = 24),
-        axis.title.x = element_text(size = 24),
+        axis.title.x = element_text(size = 24, face = "bold"),
         axis.text.y = element_text(size = 24),
-        axis.title.y = element_text(size = 24))
+        axis.title.y = element_text(size = 24, face = "bold")) 
 ggsave("Outputs/010_TCombo_vs_TControl_Outputs/CustomFigures/TCombo_vs_TControl_VolcanoPlot.tiff", Volcano, dpi = 300, width = 12, height = 12)
 
 
