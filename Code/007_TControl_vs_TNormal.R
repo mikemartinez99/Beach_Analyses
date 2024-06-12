@@ -20,6 +20,8 @@ library(AnnotationDbi)
 library(magick)
 library(ComplexHeatmap)
 library(circlize)
+library(extrafont)
+
 
 # Generate output directory
 opPath <- "Outputs/007_TControl_vs_NControl_Outputs"
@@ -119,13 +121,18 @@ resultsNames(dds)
 # Save the dds object
 saveRDS(dds, "Outputs/007_TControl_vs_NControl_Outputs/Rds_Files/TControl_vs_NControl_dds.Rds")
 
+# Unhash the following line if re-generating figures
+#dds <- readRDS("Outputs/007_TControl_vs_NControl_Outputs/Rds_Files/TControl_vs_NControl_dds.Rds")
+
 # Variance stabilize transform the data
 vsd <- vst(dds)
 
 # Run PCA and return data for custom plotting
 PCA <- plotPCA(vsd, intgroup = "Group", returnData = TRUE) 
 percentVar <- round(100* attr(PCA, "percentVar"))
-PCA$Group <- factor(PCA$Group, levels = c(treatment, reference))
+PCA$Group <- factor(PCA$Group, levels = c(reference, treatment))
+
+custom_colors <- c("Control Normal" = "steelblue2", "Control Tumor" = "firebrick2")
 
 # Plot PCA
 plot <- ggplot(PCA, aes(PC1, PC2, fill = Group, color = Group)) +
@@ -134,18 +141,22 @@ plot <- ggplot(PCA, aes(PC1, PC2, fill = Group, color = Group)) +
   geom_text(size = 4, aes(label = name), hjust = 1, vjust = 1.5) +
   xlab(paste0("PC1: ",percentVar[1],"% variance")) +
   ylab(paste0("PC2: ",percentVar[2],"% variance")) + 
+  labs(color = "",
+       fill = "") +
+  scale_fill_manual(values = custom_colors) +
+  scale_color_manual(values = custom_colors) +
   coord_fixed() +
   theme_bw() +
-  labs(title = paste(treatment, "vs", reference, sep = " ")) +
   theme(aspect.ratio = 1) +
   theme(legend.position = "bottom") +
-  theme(axis.text.x = element_text(size = 24),
-        axis.title.x = element_text(size = 26),
+  theme(text = element_text(family = "Times New Roman"),
+        axis.text.x = element_text(size = 24),
+        axis.title.x = element_text(size = 26, face = "bold"),
         axis.text.y = element_text(size = 24),
-        axis.title.y = element_text(size = 26),
+        axis.title.y = element_text(size = 26, face = "bold"),
         legend.text = element_text(size = 24),
         title = element_text(size = 26))
-ggsave("Outputs/007_TControl_vs_NControl_Outputs/DESeq2/TControl_vs_NControl_PCA.tiff", plot, width = 12, height = 8, dpi = 100)
+ggsave("Outputs/007_TControl_vs_NControl_Outputs/DESeq2/TControl_vs_NControl_PCA.tiff", plot, width = 10, height = 10, dpi = 100)
 
 ################################################################################
 
@@ -256,10 +267,10 @@ significance_threshold <- 0.05
 fc_threshold <- 1
 
 # Create a grouping variable
-res$Groups <- ifelse(res$padj < significance_threshold & res$log2FoldChange*-1 > fc_threshold, "Enriched in Control Normal",
-                     ifelse(res$padj < significance_threshold & res$log2FoldChange > fc_threshold, "Enriched in Control Tumor",
+res$Groups <- ifelse(res$padj < significance_threshold & res$log2FoldChange*-1 > fc_threshold, "Downregulated in Tumor",
+                     ifelse(res$padj < significance_threshold & res$log2FoldChange > fc_threshold, "Upregulated in Tumor",
                             ifelse(res$padj < significance_threshold, "padj < 0.05", "ns")))
-res$Groups <- factor(res$Groups, levels = c("Enriched in Control Normal", "Enriched in Control Tumor",
+res$Groups <- factor(res$Groups, levels = c("Downregulated in Tumor", "Upregulated in Tumor",
                                             "padj < 0.05", "ns"))
 
 # Be aware there is a leading white space character before each gene name!!!!! Remove it!
@@ -269,25 +280,30 @@ res$Symbols <- sub(" ", "", res$Symbols)
 genes_to_label <- c("Mmp7", "Lgr5", "Prss22", "Nox1", "Defa6", "S100a9",
                     "Vip", "Ghrl", "Myh11", "Ptgis", "Car3", "Scn7a")
 
+# Omit NA values
+res <- na.omit(res)
 
 # Plot custom volcano
 Volcano <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = Groups)) +
   geom_point(size = 3, alpha = 0.7) + 
   scale_color_manual(name = "",
-                     values = c("Enriched in Control Normal" = "steelblue", "Enriched in Control Tumor" = "firebrick2", 
+                     values = c("Downregulated in Tumor" = "steelblue", "Upregulated in Tumor" = "firebrick2", 
                                 "padj < 0.05" = "darkgrey", "ns" = "black")) +
   geom_hline(yintercept = -log10(significance_threshold), linetype = "dashed", color = "black") +
   geom_vline(xintercept = fc_threshold*-1, linetype = "dashed", color = "black") +
   geom_vline(xintercept = fc_threshold, linetype = "dashed", color = "black") +
   labs(x = "Log2 Fold Change",
        y = "-log10(padj)") +
+  scale_x_continuous(breaks = c(-12, -5, -1, 0, 1, 5, 12),  # Specify only the breaks you want
+                     limits = c(-11, 11)) +
   theme_classic() +
-  theme(legend.position = "bottom",
+  theme(text = element_text(family = "Times New Roman"),
+        legend.position = "bottom",
         legend.text = element_text(size = 18),
         axis.text.x = element_text(size = 24),
-        axis.title.x = element_text(size = 24),
+        axis.title.x = element_text(size = 24, face = "bold"),
         axis.text.y = element_text(size = 24),
-        axis.title.y = element_text(size = 24)) +
+        axis.title.y = element_text(size = 24, face = "bold")) +
   geom_text_repel(data = subset(res, Symbols %in% genes_to_label), 
                   aes(label = Symbols), 
                   nudge_y = 0.5, 
@@ -311,9 +327,9 @@ curKEGG <- read.csv("Data_Files/TControl_vs_NControl_Curated/Curated_GSEA/TContr
 # Function to format the dataframe
 formatGSEA <- function(x, reference, treatment) {
   formatted <- x %>%
-    mutate(enrichment = ifelse(enrichmentScore > 0, paste("Enriched in", treatment, sep = " "), paste("Enriched in", reference, sep = " "))) %>%
+    mutate(enrichment = ifelse(enrichmentScore > 0, paste("Downregulated in", reference, sep = " "), paste("Upregulated in", reference, sep = " "))) %>%
     mutate(GeneRatio = length(strsplit(as.character(core_enrichment), "/")) / setSize) %>%
-    mutate(enrichment = factor(enrichment, levels = c(paste("Enriched in", reference, sep = " "), paste("Enriched in", treatment, sep = " ")))) %>%
+    mutate(enrichment = factor(enrichment, levels = c(paste("Upregulated in", reference, sep = " "), paste("Downregulated in", reference, sep = " ")))) %>%
     arrange(enrichmentScore) 
   
   return(formatted)
@@ -336,10 +352,13 @@ plotDot <- function(df) {
     xlab("Enrichment Score") +
     theme(axis.text.y = element_text(size = 9)) +
     labs(x = "Enrichment Score",
-         y = "") +
+         y = "",
+         color = "P adjust",
+         size = "Set Size") +
     theme_bw() +
-    theme(axis.text.x = element_text(size = 10, angle = 90),
-          axis.title.x = element_text(size = 16),
+    theme(text = element_text(family = "Times New Roman"),
+          axis.text.x = element_text(size = 10, angle = 90),
+          axis.title.x = element_text(size = 16, face = "bold"),
           axis.text.y = element_text(size = 18),
           strip.text = element_text(size = 14, face = "bold"),
           title= element_text(size = 20),
@@ -367,14 +386,16 @@ plotbar <- function(df) {
     facet_grid(~enrichment, scales = "free") +
     scale_fill_continuous(low = "red", high = "blue") +
     labs(x = "Enrichment Score",
-         y = "") +
+         y = "",
+         fill = "P adjust") +
     theme_bw() +
-    theme(axis.text.x = element_text(size = 12, angle = 90),
-          axis.title.x = element_text(size = 20),
+    theme(text = element_text(family = "Times New Roman"),
+          axis.text.x = element_text(size = 10, angle = 90),
+          axis.title.x = element_text(size = 16, face = "bold"),
           axis.text.y = element_text(size = 18),
-          strip.text = element_text(size = 16, face = "bold"),
+          strip.text = element_text(size = 14, face = "bold"),
           title= element_text(size = 20),
-          legend.text = element_text(size = 12))
+          legend.text = element_text(size = 12)) 
   return(plot)
 }
 

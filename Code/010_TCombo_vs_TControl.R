@@ -17,6 +17,7 @@ library(org.Rn.eg.db)
 library(enrichplot)
 library(AnnotationDbi)
 library(dendextend)
+library(extrafont)
 
 # Generate output directory
 opPath <- "Outputs/010_TCombo_vs_TControl_Outputs"
@@ -689,18 +690,17 @@ significance_threshold <- 0.05
 fc_threshold <- 1
 
 # Create a grouping variable
-res$Groups <- ifelse(res$padj < significance_threshold & res$log2FoldChange*-1 > fc_threshold, "Enriched in Combo Tumor",
-                     ifelse(res$padj < significance_threshold & res$log2FoldChange > fc_threshold, "Enriched in Control Tumor",
+res$Groups <- ifelse(res$padj < significance_threshold & res$log2FoldChange*-1 > fc_threshold, "Down regulated in Combo Tumor",
+                     ifelse(res$padj < significance_threshold & res$log2FoldChange > fc_threshold, "Up regulated in Combo Tumor",
                             ifelse(res$padj < significance_threshold, "padj < 0.05", "ns")))
-res$Groups <- factor(res$Groups, levels = c("Enriched in Control Tumor", "Enriched in Combo Tumor",
+res$Groups <- factor(res$Groups, levels = c("Down regulated in Combo Tumor", "Up regulated in Combo Tumor",
                                             "padj < 0.05", "ns"))
-
 
 # Plot custom volcano
 Volcano <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = Groups)) +
   geom_point(size = 3, alpha = 0.7) + 
   scale_color_manual(name = "",
-                     values = c("Enriched in Control Tumor" = "firebrick2", "Enriched in Combo Tumor" = "steelblue", 
+                     values = c("Down regulated in Combo Tumor" = "steelblue", "Up regulated in Combo Tumor" = "firebrick2", 
                                 "padj < 0.05" = "darkgrey", "ns" = "black")) +
   geom_hline(yintercept = -log10(significance_threshold), linetype = "dashed", color = "black") +
   geom_vline(xintercept = fc_threshold*-1, linetype = "dashed", color = "black") +
@@ -711,12 +711,13 @@ Volcano <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = Groups)
        y = "-log10(padj)") +
   theme_classic() +
   theme(legend.position = "bottom",
+        text = element_text(family = "Times New Roman"),
         legend.text = element_text(size = 18),
         axis.text.x = element_text(size = 24),
         axis.title.x = element_text(size = 24),
         axis.text.y = element_text(size = 24),
         axis.title.y = element_text(size = 24))
-ggsave("Outputs/010_TCombo_vs_TControl_Outputs/CustomFigures/TCombo_vs_TControl_VolcanoPlot.tiff", Volcano, dpi = 300, width = 10, height = 10)
+ggsave("Outputs/010_TCombo_vs_TControl_Outputs/CustomFigures/TCombo_vs_TControl_VolcanoPlot.tiff", Volcano, dpi = 300, width = 12, height = 12)
 
 
 

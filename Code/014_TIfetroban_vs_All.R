@@ -369,6 +369,8 @@ Volcano <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = Groups)
   labs(x = "Log2 Fold Change",
        y = "-log10(padj)") +
   theme_classic() +
+  scale_x_continuous(breaks = c(-5, -1, 0, 1, 5),  # Specify only the breaks you want
+                     limits = c(-8, 5)) +
   theme(legend.position = "bottom",
         legend.text = element_text(size = 18),
         axis.text.x = element_text(size = 24),
