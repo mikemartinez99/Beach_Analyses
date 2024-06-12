@@ -17,6 +17,8 @@ library(ggrepel)
 library(ComplexHeatmap)
 library(Magick)
 library(circlize)
+library(extrafont)
+
 
 # Generate output directory
 opPath <- "Outputs/014_TIfetroban_vs_All_Outputs"
@@ -116,6 +118,9 @@ dds <- DESeq(dds)
 
 # Save Rds
 saveRDS(dds, file = "Outputs/014_TIfetroban_vs_All_Outputs/Rds_Files/TIfetroban_vs_TControl_dds.Rds")
+
+# Unhash this line if you are regenerating figures
+# dds <- readRDS("Outputs/014_TIfetroban_vs_All_Outputs/Rds_Files/TIfetroban_vs_TControl_dds.Rds")
 
 ################################################################################
 
@@ -243,12 +248,15 @@ write.csv(KEGG.df, file = "Outputs/014_TIfetroban_vs_All_Outputs/GSEA/TIfetroban
 curGO <- read.csv("Data_Files/Ifetroban_Study/TIfetroban_vs_TControl_Curated/Curated_GSEA/TIfetroban_vs_TControl_Curated_GO.csv")
 curKEGG <- read.csv("Data_Files/Ifetroban_Study/TIfetroban_vs_TControl_Curated/Curated_GSEA/TIfetroban_vs_TControl_Curated_KEGG.csv")
 
+reference = "Control"
+treatment = "Ifetroban"
+
 # Function to format the dataframe
 formatGSEA <- function(x, reference, treatment) {
   formatted <- x %>%
-    mutate(enrichment = ifelse(enrichmentScore > 0, paste("Enriched in", treatment, sep = " "), paste("Enriched in", reference, sep = " "))) %>%
+    mutate(enrichment = ifelse(enrichmentScore > 0, paste("Upregulated in", treatment, sep = " "), paste("Downregulated in", treatment, sep = " "))) %>%
     mutate(GeneRatio = length(strsplit(as.character(core_enrichment), "/")) / setSize) %>%
-    mutate(enrichment = factor(enrichment, levels = c(paste("Enriched in", reference, sep = " "), paste("Enriched in", treatment, sep = " ")))) %>%
+    mutate(enrichment = factor(enrichment, levels = c(paste("Downregulated in", treatment, sep = " "), paste("Upregulated in", treatment, sep = " ")))) %>%
     arrange(enrichmentScore) 
   
   return(formatted)
@@ -271,10 +279,13 @@ plotDot <- function(df) {
     xlab("Enrichment Score") +
     theme(axis.text.y = element_text(size = 9)) +
     labs(x = "Enrichment Score",
-         y = "") +
+         y = "",
+         color = "P adjust",
+         size = "Set Size") +
     theme_bw() +
-    theme(axis.text.x = element_text(size = 10, angle = 90),
-          axis.title.x = element_text(size = 16),
+    theme(text = element_text(family = "Times New Roman"),
+          axis.text.x = element_text(size = 10, angle = 90),
+          axis.title.x = element_text(size = 16, face = "bold"),
           axis.text.y = element_text(size = 18),
           strip.text = element_text(size = 14, face = "bold"),
           title= element_text(size = 20),
@@ -290,10 +301,10 @@ if (!dir.exists(customGSEAplots)) {
 
 # Plot dotplots
 GOdotplot <- plotDot(curGO)
-ggsave("Outputs/014_TIfetroban_vs_All_Outputs/CustomFigures/Custom_GSEA/TCombo_vs_TControl_Curated_GO_dotplot.tiff", GOdotplot, width = 14, height = 10, dpi = 300)
+ggsave("Outputs/014_TIfetroban_vs_All_Outputs/CustomFigures/Custom_GSEA/TIfetroban_vs_TControl_Curated_GO_dotplot.tiff", GOdotplot, width = 14, height = 10, dpi = 300)
 
 KEGGdotplot <- plotDot(curKEGG)
-ggsave("Outputs/014_TIfetroban_vs_All_Outputs/CustomFigures/Custom_GSEA/TCombo_Vs_TControl_Curated_KEGG_dotplot.tiff", KEGGdotplot, width = 14, height = 10, dpi = 300)
+ggsave("Outputs/014_TIfetroban_vs_All_Outputs/CustomFigures/Custom_GSEA/TIfetroban_Vs_TControl_Curated_KEGG_dotplot.tiff", KEGGdotplot, width = 14, height = 10, dpi = 300)
 
 ################################################################################
 
@@ -318,17 +329,20 @@ plot <- ggplot(PCA, aes(PC1, PC2, fill = Group, color = Group)) +
   scale_color_manual(values = custom_colors) +
   xlab(paste0("PC1: ",percentVar[1],"% variance")) +
   ylab(paste0("PC2: ",percentVar[2],"% variance")) + 
+  labs(color = "",
+       fill = "") +
   coord_fixed() +
   theme_bw() +
   theme(aspect.ratio = 1) +
   theme(legend.position = "bottom") +
-  theme(axis.text.x = element_text(size = 24),
-        axis.title.x = element_text(size = 26),
+  theme(text = element_text(family = "Times New Roman"),
+        axis.text.x = element_text(size = 24),
+        axis.title.x = element_text(size = 26, face = "bold"),
         axis.text.y = element_text(size = 24),
-        axis.title.y = element_text(size = 26),
+        axis.title.y = element_text(size = 26, face = "bold"),
         legend.text = element_text(size = 24),
         title = element_text(size = 26))
-ggsave("Outputs/014_TIfetroban_vs_All_Outputs/DESeq2/TIfetroban_vs_TControl_PCA.tiff", plot, width = 8, height = 8, dpi = 100)
+ggsave("Outputs/014_TIfetroban_vs_All_Outputs/DESeq2/TIfetroban_vs_TControl_PCA.tiff", plot, width = 10, height = 10, dpi = 100)
 
 ################################################################################
 
@@ -351,17 +365,20 @@ significance_threshold <- 0.05
 fc_threshold <- 1
 
 # Create a grouping variable
-res$Groups <- ifelse(res$padj < significance_threshold & res$log2FoldChange*-1 > fc_threshold, "Enriched in Control Tumor",
-                     ifelse(res$padj < significance_threshold & res$log2FoldChange > fc_threshold, "Enriched in Ifetroban Tumor",
+res$Groups <- ifelse(res$padj < significance_threshold & res$log2FoldChange*-1 > fc_threshold, "Downregulated in Ifetroban",
+                     ifelse(res$padj < significance_threshold & res$log2FoldChange > fc_threshold, "Upregulated in Ifetroban",
                             ifelse(res$padj < significance_threshold, "padj < 0.05", "ns")))
-res$Groups <- factor(res$Groups, levels = c("Enriched in Control Tumor", "Enriched in Ifetroban Tumor",
+res$Groups <- factor(res$Groups, levels = c("Downregulated in Ifetroban", "Upregulated in Ifetroban",
                                             "padj < 0.05", "ns"))
+
+# Omit NA values
+res <- na.omit(res)
 
 # Plot custom volcano
 Volcano <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = Groups)) +
   geom_point(size = 3, alpha = 0.7) + 
   scale_color_manual(name = "",
-                     values = c("Enriched in Control Tumor" = "steelblue", "Enriched in Ifetroban Tumor" = "firebrick2", 
+                     values = c("Downregulated in Ifetroban" = "steelblue", "Upregulated in Ifetroban" = "firebrick2", 
                                 "padj < 0.05" = "darkgrey", "ns" = "black")) +
   geom_hline(yintercept = -log10(significance_threshold), linetype = "dashed", color = "black") +
   geom_vline(xintercept = fc_threshold*-1, linetype = "dashed", color = "black") +
@@ -371,13 +388,16 @@ Volcano <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = Groups)
   theme_classic() +
   scale_x_continuous(breaks = c(-5, -1, 0, 1, 5),  # Specify only the breaks you want
                      limits = c(-8, 5)) +
-  theme(legend.position = "bottom",
+  labs(x = "Log2 Fold Change",
+       y = "-log10(padj)") +
+  theme(text = element_text(family = "Times New Roman"),
+        legend.position = "bottom",
         legend.text = element_text(size = 18),
         axis.text.x = element_text(size = 24),
-        axis.title.x = element_text(size = 24),
+        axis.title.x = element_text(size = 24, face = "bold"),
         axis.text.y = element_text(size = 24),
-        axis.title.y = element_text(size = 24))
-ggsave("Outputs/014_TIfetroban_vs_All_Outputs/CustomFigures/Custom_Volcanos/TIfetroban_vs_TControl_VolcanoPlot.tiff", Volcano, dpi = 300, width = 10, height = 10)
+        axis.title.y = element_text(size = 24, face = "bold")) 
+ggsave("Outputs/014_TIfetroban_vs_All_Outputs/CustomFigures/Custom_Volcanos/TIfetroban_vs_TControl_VolcanoPlot.tiff", Volcano, dpi = 300, width = 12, height = 12)
 
 # Labelled Volcano plot
 # Order the results so we can see the top hits
@@ -483,7 +503,7 @@ if (dir.exists(dataDir)) {
 }
 
 # Save as csv
-write.csv(logTPM, file = "TIfetroban_vs_TControl_Log10_TPM_Values.csv")
+write.csv(logTPM, file = "Data_Files/Ifetroban_Study/Log10_TPM_Values/TIfetroban_vs_TControl_Log10_TPM_Values.csv")
 
 # Create a directory to hold stats information
 statsDir <- "Outputs/014_TIfetroban_vs_All_Outputs/Stats"
@@ -498,6 +518,9 @@ hmDir <- "Outputs/014_TIfetroban_vs_All_Outputs/CustomFigures/Curated_Heatmaps"
 if (!dir.exists(hmDir)) {
   dir.create(hmDir)
 }
+
+# Unhash the following line if you are regenerating figures
+logTPM <- read.csv("Data_Files/Ifetroban_Study/Log10_TPM_Values/TIfetroban_vs_TControl_Log10_TPM_Values.csv")
 
 # Read in the fibroblast heatmap genes
 fibroblasts <- read.csv("Data_Files/Ifetroban_Study/Custom_Heatmap_Gene/Ifetroban_Fibroblasts.csv")
@@ -523,6 +546,7 @@ write.csv(res.filt, file = "Outputs/014_TIfetroban_vs_All_Outputs/Stats/Ifetroba
 
 # Isolate these genes from the logTPM dataframe
 fibroCounts <- logTPM[logTPM$Symbols %in% fibroGenes,]
+fibroCounts$X <- NULL
 rownames(fibroCounts) <- fibroCounts$Symbols
 fibroCounts$Symbols <- NULL
 
@@ -555,11 +579,19 @@ rowSplit <- rep(1:4, c(4,4,4,4))
 #Define the number of slices in the heatmap
 slices <- n+m
 
+# Set global options for heatmaps
+ht_opt(heatmap_column_names_gp = gpar(fontfamily = "Times"), 
+       heatmap_row_names_gp = gpar(fontfamily = "Times"), 
+       heatmap_column_title_gp = gpar(fontfamily = "Times"),
+       heatmap_row_title_gp = gpar(fontfamily = "Times"),
+       legend_title_gp = gpar(fontfamily = "Times"),
+       legend_labels_gp = gpar(fontfamily = "Times"))
+
 #Create a heatmap annotation
 fibroAnno <- HeatmapAnnotation(
-  Group = anno_block(gp = gpar(fill = c("#66C2A5", "#E78AC3"), fontisze = 14, fontface = "bold"), 
+  Group = anno_block(gp = gpar(fill = c("#66C2A5", "#E78AC3"), fontisze = 14, fontface = "bold", fontfamily = "Times"), 
                      labels = c(ref, treatment),
-                     labels_gp = gpar(col = "black", fontsize = 16, fontface = 2)),
+                     labels_gp = gpar(col = "black", fontsize = 16, fontface = 2, fontfamily = "Times")),
   col = list(Group = sample_colors),
   show_annotation_name = FALSE
 )
@@ -590,7 +622,7 @@ fibroScaled <- Heatmap(fibroMat,
                        column_title = NULL,
                        row_title = NULL,
                        row_split = rowSplit,
-                       row_names_gp = gpar(fontsize = 14))
+                       row_names_gp = gpar(fontsize = 14, fontfamily = "Times"))
 tiff("Outputs/014_TIfetroban_vs_All_Outputs/CustomFigures/Curated_Heatmaps/Ifetroban_Fibroblast_Curated_Heatmap.tiff", width = 8, height = 10, units = "in", res = 300)
 draw(fibroScaled)
 dev.off()
@@ -613,6 +645,7 @@ immuneGenes <- rownames(immune)
 
 # Isolate these genes from the logTPM dataframe
 immuneCounts <- logTPM[logTPM$Symbols %in% immuneGenes,]
+immuneCounts$X <- NULL
 rownames(immuneCounts) <- immuneCounts$Symbols
 immuneCounts$Symbols <- NULL
 
@@ -653,11 +686,19 @@ rowSplit <- rep(1:4, c(5,4,4,5))
 #Define the number of slices in the heatmap
 slices <- n+m
 
+# Set global options for heatmaps
+ht_opt(heatmap_column_names_gp = gpar(fontfamily = "Times"), 
+       heatmap_row_names_gp = gpar(fontfamily = "Times"), 
+       heatmap_column_title_gp = gpar(fontfamily = "Times"),
+       heatmap_row_title_gp = gpar(fontfamily = "Times"),
+       legend_title_gp = gpar(fontfamily = "Times"),
+       legend_labels_gp = gpar(fontfamily = "Times"))
+
 #Create a heatmap annotation
 immuneAnno <- HeatmapAnnotation(
-  Group = anno_block(gp = gpar(fill = c("#66C2A5", "#E78AC3"), fontisze = 14, fontface = "bold"), 
+  Group = anno_block(gp = gpar(fill = c("#66C2A5", "#E78AC3"), fontisze = 14, fontface = "bold", fontfamily = "Times"), 
                      labels = c(ref, treatment),
-                     labels_gp = gpar(col = "black", fontsize = 16, fontface = 2)),
+                     labels_gp = gpar(col = "black", fontsize = 16, fontface = 2, fontfamily = "Times")),
   col = list(Group = sample_colors),
   show_annotation_name = FALSE
 )
@@ -688,7 +729,7 @@ immuneScaled <- Heatmap(immuneMat,
                         column_title = NULL,
                         row_title = NULL,
                         row_split = rowSplit,
-                        row_names_gp = gpar(fontsize = 14))
+                        row_names_gp = gpar(fontsize = 14, fontfamily = "Times"))
 tiff("Outputs/014_TIfetroban_vs_All_Outputs/CustomFigures/Curated_Heatmaps/Ifetroban_Immune_Curated_Heatmap.tiff", width = 8, height = 10, units = "in", res = 300)
 draw(immuneScaled)
 dev.off()
