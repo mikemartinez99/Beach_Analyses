@@ -115,6 +115,8 @@ plot <- ggplot(PCA, aes(PC1, PC2, fill = Group, color = Group)) +
   scale_color_manual(values = custom_colors) +
   xlab(paste0("PC1: ",percentVar[1],"% variance")) +
   ylab(paste0("PC2: ",percentVar[2],"% variance")) + 
+  labs(color = "",
+       fill = "") +
   coord_fixed() +
   theme_bw() +
   theme(aspect.ratio = 1) +
@@ -195,6 +197,9 @@ normaldds <- DESeq(normaldds)
 # Save the .Rds obejct
 saveRDS(normaldds, file = "Outputs/002_Exploratory_PCA_Outputs/Rds_files/Filtered_NormalSamples_ExploratoryPCA_DESeq2_Object.Rds")
 
+# Unhash this line out if you are regenerating figures
+normaldds <- readRDS("Outputs/002_Exploratory_PCA_Outputs/Rds_files/Filtered_NormalSamples_ExploratoryPCA_DESeq2_Object.Rds")
+
 # Variance-stabilization transformation
 normalvsd <- vst(normaldds)
 
@@ -215,6 +220,8 @@ normalplot <- ggplot(normalPCA, aes(PC1, PC2, fill = Group, color = Group)) +
   scale_color_manual(values = custom_colors) +
   xlab(paste0("PC1: ",percentVar[1],"% variance")) +
   ylab(paste0("PC2: ",percentVar[2],"% variance")) + 
+  labs(color = "",
+       fill = "") +
   coord_fixed() +
   theme_bw() +
   theme(aspect.ratio = 1) +
@@ -226,7 +233,7 @@ normalplot <- ggplot(normalPCA, aes(PC1, PC2, fill = Group, color = Group)) +
         axis.title.y = element_text(size = 26, face = "bold"),
         legend.text = element_text(size = 24),
         title = element_text(size = 26))
-ggsave("Outputs/002_Exploratory_PCA_Outputs/Final_Filtered_NormalSamples_PCA.tiff", normalplot, width = 12, height = 8, dpi = 200)
+ggsave("Outputs/002_Exploratory_PCA_Outputs/Final_Filtered_NormalSamples_PCA.tiff", normalplot, width = 10, height = 10, dpi = 200)
 
 
 
