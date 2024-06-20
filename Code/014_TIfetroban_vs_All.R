@@ -15,7 +15,7 @@ library(AnnotationDbi)
 library(org.Rn.eg.db)
 library(ggrepel)
 library(ComplexHeatmap)
-library(Magick)
+library(magick)
 library(circlize)
 library(extrafont)
 
@@ -681,7 +681,7 @@ names(sample_colors) <- c(ref, treatment)
 
 #Set heatmap splitting pattern
 hmSplit <- rep(1:2, c(n, m))
-rowSplit <- rep(1:4, c(5,4,4,5))
+rowSplit <- rep(1:4, c(5,4,3,5))
 
 #Define the number of slices in the heatmap
 slices <- n+m
