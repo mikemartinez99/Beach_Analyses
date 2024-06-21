@@ -122,7 +122,7 @@ resultsNames(dds)
 saveRDS(dds, "Outputs/007_TControl_vs_NControl_Outputs/Rds_Files/TControl_vs_NControl_dds.Rds")
 
 # Unhash the following line if re-generating figures
-#dds <- readRDS("Outputs/007_TControl_vs_NControl_Outputs/Rds_Files/TControl_vs_NControl_dds.Rds")
+dds <- readRDS("Outputs/007_TControl_vs_NControl_Outputs/Rds_Files/TControl_vs_NControl_dds.Rds")
 
 # Variance stabilize transform the data
 vsd <- vst(dds)
@@ -130,14 +130,15 @@ vsd <- vst(dds)
 # Run PCA and return data for custom plotting
 PCA <- plotPCA(vsd, intgroup = "Group", returnData = TRUE) 
 percentVar <- round(100* attr(PCA, "percentVar"))
-PCA$Group <- factor(PCA$Group, levels = c(reference, treatment))
+PCA$Group <- ifelse(PCA$Group == "Control Normal", "Normal", "Tumor")
+PCA$Group <- factor(PCA$Group, levels = c("Normal", "Tumor"))
 
-custom_colors <- c("Control Normal" = "steelblue2", "Control Tumor" = "firebrick2")
+custom_colors <- c("Normal" = "steelblue2", "Tumor" = "firebrick2")
 
 # Plot PCA
 plot <- ggplot(PCA, aes(PC1, PC2, fill = Group, color = Group)) +
   geom_point(size = 3) +
-  stat_ellipse(geom = "polygon", type = "norm", level = 0.90, alpha = 0.10, aes(fill = group)) +
+  stat_ellipse(geom = "polygon", type = "norm", level = 0.90, alpha = 0.10, aes(fill = Group)) +
   geom_text(size = 4, aes(label = name), hjust = 1, vjust = 1.5) +
   xlab(paste0("PC1: ",percentVar[1],"% variance")) +
   ylab(paste0("PC2: ",percentVar[2],"% variance")) + 
@@ -327,19 +328,19 @@ curKEGG <- read.csv("Data_Files/TControl_vs_NControl_Curated/Curated_GSEA/TContr
 # Function to format the dataframe
 formatGSEA <- function(x, reference, treatment) {
   formatted <- x %>%
-    mutate(enrichment = ifelse(enrichmentScore > 0, paste("Downregulated in", reference, sep = " "), paste("Upregulated in", reference, sep = " "))) %>%
+    mutate(enrichment = ifelse(enrichmentScore > 0, paste("Upregulated in", treatment, sep = " "), paste("Downregulated in", treatment, sep = " "))) %>%
     mutate(GeneRatio = length(strsplit(as.character(core_enrichment), "/")) / setSize) %>%
-    mutate(enrichment = factor(enrichment, levels = c(paste("Upregulated in", reference, sep = " "), paste("Downregulated in", reference, sep = " ")))) %>%
+    mutate(enrichment = factor(enrichment, levels = c(paste("Downregulated in", treatment, sep = " "), paste("Upregulated in", treatment, sep = " ")))) %>%
     arrange(enrichmentScore) 
   
   return(formatted)
 }
 
 # Format the dataframes and set factors
-curGO <- formatGSEA(curGO, "Tumor", "Normal")
+curGO <- formatGSEA(curGO, "Normal", "Tumor")
 curGO$Description <- factor(curGO$Description, levels = curGO$Description)
 
-curKEGG <- formatGSEA(curKEGG, "Tumor", "Normal")
+curKEGG <- formatGSEA(curKEGG, "Normal", "Tumor")
 curKEGG$Description <- factor(curKEGG$Description, levels = curKEGG$Description)
 
 # Function to plot dotplot
