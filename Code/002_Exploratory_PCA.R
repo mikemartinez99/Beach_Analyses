@@ -93,23 +93,26 @@ dds <- DESeq(dds)
 saveRDS(dds, file = "Outputs/002_Exploratory_PCA_Outputs/Rds_files/Filtered_TumorSamples_ExploratoryPCA_DESeq2_Object.Rds")
 
 # Run this line if you are re-generating a pca
-# dds <- readRDS(file = "Outputs/002_Exploratory_PCA_Outputs/Rds_files/Filtered_TumorSamples_ExploratoryPCA_DESeq2_Object.Rds")
+dds <- readRDS(file = "Outputs/002_Exploratory_PCA_Outputs/Rds_files/Filtered_TumorSamples_ExploratoryPCA_DESeq2_Object.Rds")
 
 #Create a summarized experiment
 vsd <- vst(dds)
 
+
+
 # Run PCA
 PCA <- plotPCA(vsd, intgroup = "Group", returnData = TRUE) 
 percentVar <- round(100* attr(PCA, "percentVar"))
-PCA$Group <- factor(PCA$Group, levels = c("Control", "Naproxen", "EPA", "Combo"))
+PCA$Group <- ifelse(PCA$Group == "Control", "Untreated", ifelse(PCA$Group == "Naproxen", "Naproxen", ifelse(PCA$Group == "EPA", "EPA", "Combination")))
+PCA$Group <- factor(PCA$Group, levels = c("Untreated", "Naproxen", "EPA", "Combination"))
 
 # Set custom colors
-custom_colors <- c("Control" = "#66C2A5", "Naproxen" = "#FC8D62", "EPA" = "#8DA0CB", "Combo" = "#E78AC3")
+custom_colors <- c("Untreated" = "#66C2A5", "Naproxen" = "#FC8D62", "EPA" = "#8DA0CB", "Combination" = "#E78AC3")
 
 # Plot
 plot <- ggplot(PCA, aes(PC1, PC2, fill = Group, color = Group)) +
   geom_point(size = 3) +
-  stat_ellipse(geom = "polygon", type = "norm", level = 0.90, alpha = 0.10, aes(fill = group)) +
+  stat_ellipse(geom = "polygon", type = "norm", level = 0.90, alpha = 0.10, aes(fill = Group)) +
   geom_text_repel(size = 4, aes(label = name), hjust = 1, vjust = 1.5) +
   scale_fill_manual(values = custom_colors) +
   scale_color_manual(values = custom_colors) +
