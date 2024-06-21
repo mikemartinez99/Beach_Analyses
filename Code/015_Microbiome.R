@@ -254,13 +254,185 @@ ggsave("Outputs/015_Microbiome_Outputs/Community_Compositions/Phylum/Phylum_Rela
 
 ################################################################################
 
+# Specify a class ouput directory
+classDir <- paste(commDir, "Class", sep = "/")
+if (!dir.exists(classDir)) {
+  dir.create(classDir)
+}
+
+# Custom color palette for class
+customPal <- tax_palette(
+  data = ps.rel, rank = "Class", pal = "kelly", n = 20, add = c(Other = "black")
+)
+tax_palette_plot(customPal)
+
+# Classify everything with a relative abundance less than or equal to 0.15 as "other"
+classData <- abundances[["Class"]]
+classData$Class <- as.character(classData$Class)
+ClassMax <- ddply(classData, ~Class, function(x) c(Max = max(x$Abundance)))
+Other <- ClassMax[ClassMax$Max <= 0.10,]$Class
+classData[classData$Class %in% Other,]$Class <- "Other"
+
+# Factor GroupName
+classData$GroupName <- factor(classData$GroupName, levels = c("Control", "Combination"))
+
+# Factor the class names
+classData$Class <- factor(classData$Class, levels = c("Bacteroidia", "Clostridia", "Erysipelotrichia", "Negativicutes", "Verrucomicrobiae", "Other"))
+
+# Plot
+classplot <- ggplot(classData, aes(x = sampleid, y = Abundance, fill = Class)) +
+  geom_bar(stat = "identity") +
+  facet_grid(~GroupName, scales = "free_x") +
+  theme_bw() +
+  labs(x = "Sample ID",
+       y= "Relative Abundance (%)",
+       title = "Class-Level Relative Abundance") +
+  theme(axis.title.x = element_text(size = 14),
+        axis.text.x = element_text(angle = 90),
+        axis.title.y = element_text(size = 14),
+        axis.text.y = element_text(size = 14),
+        strip.text = element_text(size = 14, face = "bold"),
+        legend.position = "bottom") +
+  scale_fill_manual(values = customPal) +
+  scale_y_continuous(labels = scales::percent)
+ggsave("Outputs/015_Microbiome_Outputs/Community_Compositions/Class/Class_Relative_Abundance.tiff", classplot, dpi = 200)
+
+################################################################################
+
+# Specify a order ouput directory
+orderDir <- paste(commDir, "Order", sep = "/")
+if (!dir.exists(orderDir)) {
+  dir.create(orderDir)
+}
+
+customPal <- tax_palette(
+  data = ps.rel, rank = "Order", pal = "kelly", n = 20, add = c(Other = "black")
+)
+tax_palette_plot(customPal)
 
 
+# Classify everything with a relative abundance less than or equal to 0.15 as "other"
+orderData <- abundances[["Order"]]
+orderData$Order <- as.character(orderData$Order)
+OrderMax <- ddply(orderData, ~Order, function(x) c(Max = max(x$Abundance)))
+Other <- OrderMax[OrderMax$Max <= 0.10,]$Order
+orderData[orderData$Order %in% Other,]$Order <- "Other"
 
+# Factor GroupName
+orderData$GroupName <- factor(orderData$GroupName, levels = c("Control", "Combination"))
 
+# Factor the class names so "Other" comes last
+orderData$Order <- factor(orderData$Order, levels = c("Bacteroidales", "Clostridiales", "Erysipelotrichales", "Lactobacillales", "Selenomonadales", "Verrucomicrobiales", "Other"))
 
+orderplot <- ggplot(orderData, aes(x = sampleid, y = Abundance, fill = Order)) +
+  geom_bar(stat = "identity") +
+  facet_grid(~GroupName, scales = "free_x") +
+  theme_bw() +
+  labs(x = "Sample ID",
+       y= "Relative Abundance (%)",
+       title = "Order-Level Relative Abundance") +
+  theme(axis.title.x = element_text(size = 14),
+        axis.text.x = element_text(angle = 90),
+        axis.title.y = element_text(size = 14),
+        axis.text.y = element_text(size = 14),
+        strip.text = element_text(size = 14, face = "bold"),
+        legend.position = "bottom") +
+  scale_fill_manual(values = customPal) +
+  scale_y_continuous(labels = scales::percent)
+ggsave("Outputs/015_Microbiome_Outputs/Community_Compositions/Order/Order_Relative_Abundance.tiff", orderplot, dpi = 200)
 
+################################################################################
 
+# Specify a family ouput directory
+familyDir <- paste(commDir, "Family", sep = "/")
+if (!dir.exists(familyDir)) {
+  dir.create(familyDir)
+}
 
+# Custom color palette
+customPal <- tax_palette(
+  data = ps.rel, rank = "Family", pal = "kelly", n = 20, add = c(Other = "black")
+)
+tax_palette_plot(customPal)
+
+# Classify everything with a relative abundance less than or equal to 0.05 as "other"
+familyData <- abundances[["Family"]]
+familyData$Family <- as.character(familyData$Family)
+FamilyMax <- ddply(familyData, ~Family, function(x) c(Max = max(x$Abundance)))
+Other <- FamilyMax[FamilyMax$Max <= 0.05,]$Family
+familyData[familyData$Family %in% Other,]$Family <- "Other"
+
+# Factor GroupName
+familyData$GroupName <- factor(familyData$GroupName, levels = c("Control", "Combination"))
+
+# Factor the family names so "Other" comes last
+familyData$Family <- factor(familyData$Family, levels = c("Akkermansiaceae", "Bacteroidaceae", "Clostridiaceae 1", 
+                                                          "Erysipelotrichaceae", "Lachnospiraceae", "Lactobacillaceae",
+                                                          "Muribaculaceae", "Peptococcaceae 1", "Peptostreptococcaceae",
+                                                          "Ruminococcaceae", "Sporomusaceae", "Other"))
+
+# Plot
+familyplot <- ggplot(familyData, aes(x = sampleid, y = Abundance, fill = Family)) +
+  geom_bar(stat = "identity") +
+  facet_grid(~GroupName, scales = "free_x") +
+  theme_classic() +
+  labs(x = "Sample ID",
+       y= "Relative Abundance (%)",
+       title = "Family-Level Relative Abundance") +
+  theme(axis.title.x = element_text(size = 14),
+        axis.text.x = element_text(angle = 90),
+        axis.title.y = element_text(size = 14),
+        axis.text.y = element_text(size = 14),
+        strip.text = element_text(size = 14, face = "bold"),
+        legend.position = "right") +
+  scale_fill_manual(values = customPal) +
+  scale_y_continuous(labels = scales::percent)
+ggsave("Outputs/015_Microbiome_Outputs/Community_Compositions/Family/Family_Relative_Abundance.tiff", familyplot, dpi = 200)
+
+################################################################################
+
+# Specify a genus ouput directory
+genusDir <- paste(commDir, "Genus", sep = "/")
+if (!dir.exists(genusDir)) {
+  dir.create(genusDir)
+}
+
+# Custom color palette
+customPal <- tax_palette(
+  data = ps.rel, rank = "Genus", pal = "kelly", n = 20, add = c(Other = "black")
+)
+tax_palette_plot(customPal)
+
+# Classify everything with a relative abundance less than or equal to 0.05 as "other"
+genusData <- abundances[["Genus"]]
+genusData$Family <- as.character(genusData$Genus)
+GenusMax <- ddply(genusData, ~Genus, function(x) c(Max = max(x$Abundance)))
+Other <- GenusMax[GenusMax$Max <= 0.05,]$Genus
+genusData[genusData$Genus %in% Other,]$Genus <- "Other"
+
+# Factor GroupName
+genusData$GroupName <- factor(genusData$GroupName, levels = c("Control", "Combination"))
+
+# Factor the genera names
+genusLevel <- unique(genusData$Genus)
+genusData$Genus <- factor(genusData$Genus, levels = genusLevel)
+
+# Plot
+genusplot <- ggplot(genusData, aes(x = sampleid, y = Abundance, fill = Genus)) +
+  geom_bar(stat = "identity") +
+  facet_grid(~GroupName, scales = "free") +
+  theme_classic() +
+  labs(x = "Sample ID",
+       y= "Relative Abundance (%)",
+       title = "Genus-Level Relative Abundance") +
+  theme(axis.title.x = element_text(size = 14),
+        axis.text.x = element_text(angle = 90),
+        axis.title.y = element_text(size = 14),
+        axis.text.y = element_text(size = 14),
+        strip.text = element_text(size = 14, face = "bold"),
+        legend.position = "right") +
+  scale_fill_manual(values = customPal) +
+  scale_y_continuous(labels = scales::percent)
+ggsave("Outputs/015_Microbiome_Outputs/Community_Compositions/Genus/Genus_Relative_Abundance.tiff", genusplot, dpi = 200)
 
 
