@@ -101,7 +101,7 @@ resultsNames(dds)
 saveRDS(dds, file = "Outputs/010_TCombo_vs_TControl_Outputs/Rds_Files/TCombo_vs_TControl_dds.Rds")
 
 # Unhash this line if you are regenerating figures
-#dds <- readRDS("Outputs/010_TCombo_vs_TControl_Outputs/Rds_Files/TCombo_vs_TControl_dds.Rds")
+# dds <- readRDS("Outputs/010_TCombo_vs_TControl_Outputs/Rds_Files/TCombo_vs_TControl_dds.Rds")
 
 ################################################################################
 
@@ -268,9 +268,9 @@ curKEGG <- read.csv("Data_Files/TCombo_vs_TControl_Curated/Curated_GSEA/TCombo_v
 # Function to format the dataframe
 formatGSEA <- function(x, reference, treatment) {
   formatted <- x %>%
-    mutate(enrichment = ifelse(enrichmentScore > 0, paste("Downregulated in", reference, sep = " "), paste("Upregulated in", reference, sep = " "))) %>%
+    mutate(enrichment = ifelse(enrichmentScore > 0, paste("Upregulated in", treatment, sep = " "), paste("Downregulated in", treatment, sep = " "))) %>%
     mutate(GeneRatio = length(strsplit(as.character(core_enrichment), "/")) / setSize) %>%
-    mutate(enrichment = factor(enrichment, levels = c(paste("Upregulated in", reference, sep = " "), paste("Downregulated in", reference, sep = " ")))) %>%
+    mutate(enrichment = factor(enrichment, levels = c(paste("Downregulated in", treatment, sep = " "), paste("Upregulated in", treatment, sep = " ")))) %>%
     arrange(enrichmentScore) 
   
   return(formatted)
@@ -278,10 +278,10 @@ formatGSEA <- function(x, reference, treatment) {
 
 
 # Format the dataframes and set factors
-curGO <- formatGSEA(curGO, "Control", "Combo")
+curGO <- formatGSEA(curGO, "Control", "Combination")
 curGO$Description <- factor(curGO$Description, levels = curGO$Description)
 
-curKEGG <- formatGSEA(curKEGG, "Control", "Combo")
+curKEGG <- formatGSEA(curKEGG, "Control", "Combination")
 curKEGG$Description <- factor(curKEGG$Description, levels = curKEGG$Description)
 
 # Function to plot dotplot
@@ -737,17 +737,17 @@ significance_threshold <- 0.05
 fc_threshold <- 1
 
 # Create a grouping variable
-res$Groups <- ifelse(res$padj < significance_threshold & res$log2FoldChange*-1 > fc_threshold, "Down regulated in Combo Tumor",
-                     ifelse(res$padj < significance_threshold & res$log2FoldChange > fc_threshold, "Up regulated in Combo Tumor",
+res$Groups <- ifelse(res$padj < significance_threshold & res$log2FoldChange*-1 > fc_threshold, "Down regulated in Combination Tumor",
+                     ifelse(res$padj < significance_threshold & res$log2FoldChange > fc_threshold, "Up regulated in Combination Tumor",
                             ifelse(res$padj < significance_threshold, "padj < 0.05", "ns")))
-res$Groups <- factor(res$Groups, levels = c("Down regulated in Combo Tumor", "Up regulated in Combo Tumor",
+res$Groups <- factor(res$Groups, levels = c("Down regulated in Combination Tumor", "Up regulated in Combination Tumor",
                                             "padj < 0.05", "ns"))
 
 # Plot custom volcano
 Volcano <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = Groups)) +
   geom_point(size = 3, alpha = 0.7) + 
   scale_color_manual(name = "",
-                     values = c("Down regulated in Combo Tumor" = "steelblue", "Up regulated in Combo Tumor" = "firebrick2", 
+                     values = c("Down regulated in Combination Tumor" = "steelblue", "Up regulated in Combination Tumor" = "firebrick2", 
                                 "padj < 0.05" = "darkgrey", "ns" = "black")) +
   geom_hline(yintercept = -log10(significance_threshold), linetype = "dashed", color = "black") +
   geom_vline(xintercept = fc_threshold*-1, linetype = "dashed", color = "black") +
