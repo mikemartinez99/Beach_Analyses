@@ -370,7 +370,7 @@ if (!dir.exists(curatedDataDir)){
 write.csv(logTPM, file = "Data_Files/TCombo_vs_TControl_Curated/Log10_TPM_Values/TCombo_vs_TControl_Log10_TPM_Values.csv")
 
 # Unhash the following line if you are regenerating figures
-#logTPM <- read.csv("Data_Files/TCombo_vs_TControl_Curated/Log10_TPM_Values/TCombo_vs_TControl_Log10_TPM_Values.csv")
+# logTPM <- read.csv("Data_Files/TCombo_vs_TControl_Curated/Log10_TPM_Values/TCombo_vs_TControl_Log10_TPM_Values.csv")
 
 ################################################################################
 # Set base font
@@ -427,7 +427,7 @@ fibroMat <- t(apply(fibroCounts, 1, cal_z_score))
 # Define slices (n = reference, m = treatment) and labels
 n <- 7
 m <- 7
-ref <- "Control"
+ref <- "Untreated"
 treatment <- "Combination"
 
 # Assign sample group colors
@@ -535,7 +535,7 @@ immuneMat <- t(apply(immuneCounts, 1, cal_z_score))
 # Define slices (n = reference, m = treatment) and labels
 n <- 7
 m <- 7
-ref <- "Control"
+ref <- "Untreated"
 treatment <- "Combination"
 
 #Set heatmap splitting pattern
@@ -637,7 +637,7 @@ differMat <- t(apply(differCounts, 1, cal_z_score))
 # Define slices (n = reference, m = treatment) and labels
 n <- 7
 m <- 7
-ref <- "Control"
+ref <- "Untreated"
 treatment <- "Combination"
 
 # Set splitting pattern
