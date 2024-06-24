@@ -315,10 +315,11 @@ vsd <- vst(dds)
 # Run PCA
 PCA <- plotPCA(vsd, intgroup = "Group", returnData = TRUE) 
 percentVar <- round(100* attr(PCA, "percentVar"))
-PCA$Group <- factor(PCA$Group, levels = c("Control", "Ifetroban"))
+PCA$Group <- ifelse(PCA$Group == "Control", "Untreated", "Ifetroban")
+PCA$Group <- factor(PCA$Group, levels = c("Untreated", "Ifetroban"))
 
 # Assign colors
-custom_colors <- c("Control" = "#66C2A5", "Ifetroban" = "#E78AC3")
+custom_colors <- c("Untreated" = "#66C2A5", "Ifetroban" = "#E78AC3")
 
 # Plot the explortatory PCA
 plot <- ggplot(PCA, aes(PC1, PC2, fill = Group, color = Group)) +
@@ -342,7 +343,7 @@ plot <- ggplot(PCA, aes(PC1, PC2, fill = Group, color = Group)) +
         axis.title.y = element_text(size = 26, face = "bold"),
         legend.text = element_text(size = 24),
         title = element_text(size = 26))
-ggsave("Outputs/014_TIfetroban_vs_All_Outputs/DESeq2/TIfetroban_vs_TControl_PCA.tiff", plot, width = 10, height = 10, dpi = 100)
+ggsave("Outputs/014_TIfetroban_vs_All_Outputs/DESeq2/TIfetroban_vs_TControl_PCA.tiff", plot, width = 10, height = 10, dpi = 300)
 
 ################################################################################
 
@@ -505,6 +506,9 @@ if (dir.exists(dataDir)) {
 # Save as csv
 write.csv(logTPM, file = "Data_Files/Ifetroban_Study/Log10_TPM_Values/TIfetroban_vs_TControl_Log10_TPM_Values.csv")
 
+# Unhash this line if you are editing figures
+# logTPM <- read.csv("Data_Files/Ifetroban_Study/Log10_TPM_Values/TIfetroban_vs_TControl_Log10_TPM_Values.csv")
+
 # Create a directory to hold stats information
 statsDir <- "Outputs/014_TIfetroban_vs_All_Outputs/Stats"
 if (!dir.exists(statsDir)) {
@@ -565,7 +569,7 @@ fibroMat <- t(apply(fibroCounts, 1, cal_z_score))
 # Define slices (n = reference, m = treatment) and labels
 n <- 5
 m <- 5
-ref <- "Control"
+ref <- "Untreated"
 treatment <- "Ifetroban"
 
 # Assign sample group colors
@@ -672,7 +676,7 @@ immuneMat <- t(apply(immuneCounts, 1, cal_z_score))
 # Define slices (n = reference, m = treatment) and labels
 n <- 5
 m <- 5
-ref <- "Control"
+ref <- "Untreated"
 treatment <- "Ifetroban"
 
 # Assign sample group colors
