@@ -372,12 +372,19 @@ res$Groups <- ifelse(res$padj < significance_threshold & res$log2FoldChange*-1 >
 res$Groups <- factor(res$Groups, levels = c("Downregulated in Ifetroban", "Upregulated in Ifetroban",
                                             "padj < 0.05", "ns"))
 
+# Label subset of genes
+genesToLabel <- c("Acta2", "Tgfb2", "Fgf2", "Fap", "Lif", "Gli1", "Csf3", "Pdgfrb", # Ifetroban Down
+                  "Ucp3", "Rpl36", "Snap25", "Ddn") # Ifetroban Up
+
 # Omit NA values
 res <- na.omit(res)
 
 # Plot custom volcano
 Volcano <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = Groups)) +
-  geom_point(size = 3, alpha = 0.7) + 
+  geom_point(size = 3, alpha = 0.6) + 
+  geom_text_repel(data = res[res$Symbols %in% genesToLabel,], aes(label = Symbols), nudge_y = 0.5,
+                  color = "black",
+                  box.padding = unit(0.45, "lines")) +
   scale_color_manual(name = "",
                      values = c("Downregulated in Ifetroban" = "steelblue", "Upregulated in Ifetroban" = "firebrick2", 
                                 "padj < 0.05" = "darkgrey", "ns" = "black")) +
