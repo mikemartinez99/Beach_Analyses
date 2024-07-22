@@ -384,6 +384,8 @@ Volcano <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = Groups)
   geom_point(size = 3, alpha = 0.6) + 
   geom_text_repel(data = res[res$Symbols %in% genesToLabel,], aes(label = Symbols), nudge_y = 0.5,
                   color = "black",
+                  bg.color = "white",
+                  bg.r = 0.15,
                   box.padding = unit(0.45, "lines")) +
   scale_color_manual(name = "",
                      values = c("Downregulated in Ifetroban" = "steelblue", "Upregulated in Ifetroban" = "firebrick2", 

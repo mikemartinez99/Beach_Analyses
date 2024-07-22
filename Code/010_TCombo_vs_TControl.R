@@ -743,9 +743,18 @@ res$Groups <- ifelse(res$padj < significance_threshold & res$log2FoldChange*-1 >
 res$Groups <- factor(res$Groups, levels = c("Down regulated in Combination Tumor", "Up regulated in Combination Tumor",
                                             "padj < 0.05", "ns"))
 
+# Label a subset of genes
+genesToLabel <- c("Reg3b", "Csf3", "S100a9", "Il17a", "Nos2", "Mmp7", "Cxcl1", "COX2", # Combo Down
+                  "Aqp8", "Pck1", "Grem2", "Ghrl", "Cnn3", "Myh11") # Combo Up
+
 # Plot custom volcano
 Volcano <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = Groups)) +
   geom_point(size = 3, alpha = 0.7) + 
+  geom_text_repel(data = res[res$Symbols %in% genesToLabel,], aes(label = Symbols), nudge_y = 0.5,
+                  color = "black",
+                  bg.color = "white",
+                  bg.r = 0.15,
+                  box.padding = unit(0.60, "lines")) +
   scale_color_manual(name = "",
                      values = c("Down regulated in Combination Tumor" = "steelblue", "Up regulated in Combination Tumor" = "firebrick2", 
                                 "padj < 0.05" = "darkgrey", "ns" = "black")) +
