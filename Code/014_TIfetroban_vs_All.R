@@ -373,7 +373,7 @@ res$Groups <- factor(res$Groups, levels = c("Downregulated in Ifetroban", "Upreg
                                             "padj < 0.05", "ns"))
 
 # Label subset of genes
-genesToLabel <- c("Acta2", "Tgfb2", "Fgf2", "Fap", "Lif", "Gli1", "Csf3", "Pdgfrb", # Ifetroban Down
+genesToLabel <- c("Acta2", "Tgfb2", "Fgf2", "Foxp3", "Vegfa", "Gli1", "Cd3e", "Cd69", # Ifetroban Down
                   "Ucp3", "Rpl36", "Snap25", "Ddn") # Ifetroban Up
 
 # Omit NA values
@@ -408,7 +408,7 @@ Volcano <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = Groups)
         axis.title.x = element_text(size = 24, face = "bold"),
         axis.text.y = element_text(size = 24),
         axis.title.y = element_text(size = 24, face = "bold")) 
-ggsave("Outputs/014_TIfetroban_vs_All_Outputs/CustomFigures/Custom_Volcanos/TIfetroban_vs_TControl_VolcanoPlot.tiff", Volcano, dpi = 300, width = 12, height = 8)
+ggsave("Outputs/014_TIfetroban_vs_All_Outputs/CustomFigures/Custom_Volcanos/New_TIfetroban_vs_TControl_VolcanoPlot.tiff", Volcano, dpi = 300, width = 12, height = 12)
 
 # Labelled Volcano plot
 # Order the results so we can see the top hits

@@ -744,8 +744,8 @@ res$Groups <- factor(res$Groups, levels = c("Down regulated in Combination Tumor
                                             "padj < 0.05", "ns"))
 
 # Label a subset of genes
-genesToLabel <- c("Reg3b", "Csf3", "S100a9", "Il17a", "Nos2", "Mmp7", "Cxcl1", "COX2", # Combo Down
-                  "Aqp8", "Pck1", "Grem2", "Ghrl", "Cnn3", "Myh11") # Combo Up
+genesToLabel <- c("Reg3b", "Csf3", "S100a9", "Il17a", "Nos2", "Mmp7", "Cxcl1", "Ptgs2", # Combo Down
+                  "Aqp8", "Pck1", "Grem2", "Ghrl", "Cnn1", "Myh11") # Combo Up
 
 # Plot custom volcano
 Volcano <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = Groups)) +
@@ -774,7 +774,7 @@ Volcano <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = Groups)
         axis.title.x = element_text(size = 24, face = "bold"),
         axis.text.y = element_text(size = 24),
         axis.title.y = element_text(size = 24, face = "bold")) 
-ggsave("Outputs/010_TCombo_vs_TControl_Outputs/CustomFigures/TCombo_vs_TControl_VolcanoPlot.tiff", Volcano, dpi = 300, width = 12, height = 8)
+ggsave("Outputs/010_TCombo_vs_TControl_Outputs/CustomFigures/New_TCombo_vs_TControl_VolcanoPlot.tiff", Volcano, dpi = 300, width = 12, height = 12)
 
 
 
