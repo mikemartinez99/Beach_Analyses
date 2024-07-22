@@ -386,6 +386,7 @@ Volcano <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = Groups)
                   color = "black",
                   bg.color = "white",
                   bg.r = 0.15,
+                  size = 6,
                   box.padding = unit(0.45, "lines")) +
   scale_color_manual(name = "",
                      values = c("Downregulated in Ifetroban" = "steelblue", "Upregulated in Ifetroban" = "firebrick2", 
@@ -407,7 +408,7 @@ Volcano <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = Groups)
         axis.title.x = element_text(size = 24, face = "bold"),
         axis.text.y = element_text(size = 24),
         axis.title.y = element_text(size = 24, face = "bold")) 
-ggsave("Outputs/014_TIfetroban_vs_All_Outputs/CustomFigures/Custom_Volcanos/TIfetroban_vs_TControl_VolcanoPlot.tiff", Volcano, dpi = 300, width = 12, height = 12)
+ggsave("Outputs/014_TIfetroban_vs_All_Outputs/CustomFigures/Custom_Volcanos/TIfetroban_vs_TControl_VolcanoPlot.tiff", Volcano, dpi = 300, width = 12, height = 8)
 
 # Labelled Volcano plot
 # Order the results so we can see the top hits

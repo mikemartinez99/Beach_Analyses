@@ -754,6 +754,7 @@ Volcano <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = Groups)
                   color = "black",
                   bg.color = "white",
                   bg.r = 0.15,
+                  size = 6,
                   box.padding = unit(0.60, "lines")) +
   scale_color_manual(name = "",
                      values = c("Down regulated in Combination Tumor" = "steelblue", "Up regulated in Combination Tumor" = "firebrick2", 
@@ -773,7 +774,7 @@ Volcano <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = Groups)
         axis.title.x = element_text(size = 24, face = "bold"),
         axis.text.y = element_text(size = 24),
         axis.title.y = element_text(size = 24, face = "bold")) 
-ggsave("Outputs/010_TCombo_vs_TControl_Outputs/CustomFigures/TCombo_vs_TControl_VolcanoPlot.tiff", Volcano, dpi = 300, width = 12, height = 12)
+ggsave("Outputs/010_TCombo_vs_TControl_Outputs/CustomFigures/TCombo_vs_TControl_VolcanoPlot.tiff", Volcano, dpi = 300, width = 12, height = 8)
 
 
 
