@@ -238,7 +238,108 @@ normalplot <- ggplot(normalPCA, aes(PC1, PC2, fill = Group, color = Group)) +
         title = element_text(size = 26))
 ggsave("Outputs/002_Exploratory_PCA_Outputs/Final_Filtered_NormalSamples_PCA.tiff", normalplot, width = 10, height = 10, dpi = 200)
 
+################################################################################
 
+# Read in the tumor counts and meta
+tumor <- read.csv("Data_Files/Filtered_Tumor_Counts/Final_Filtered_Tumor_Counts.csv")
+rownames(tumor) <- tumor$X
+tmeta <- read.csv("Data_Files/Filtered_Tumor_Counts/Final_Filtered_Tumor_Metadata.csv")
+
+# Remove the ifetroban, TP252, and TP252_Naproxen samples from the metadata
+keepSamples <- c("Control", "Naproxen", "EPA", "Combo")
+tmeta <- tmeta[tmeta$Group %in% keepSamples,]
+
+# Get a list of tumor samples to keep in the counts, edit the names so they match the counts
+tmetaSamps <- tmeta$Sample
+tmetaSamps <- gsub("-", ".", tmetaSamps)
+
+# Filter the counts
+tumor <- tumor[,colnames(tumor) %in% tmetaSamps]
+
+# Read in the normal counts and meta
+normal <- read.csv("Data_Files/Filtered_Normal_Counts/Final_Filtered_Normal_Counts.csv")
+rownames(normal) <- normal$X
+nmeta <- read.csv("Data_Files/Filtered_Normal_Counts/Final_Filtered_Normal_Metadata.csv")
+
+# Only keep the control samples for normal
+nmeta <- nmeta[nmeta$Group == "Control",]
+
+# Rename group to "Normal Control"
+nmeta$Group <- "Normal Control"
+
+# Get a list of samples to keep in the normal counts
+nmetaSamps <- nmeta$Sample
+nmetaSamps <- gsub("-", ".", nmetaSamps)
+
+# Filter the normal counts
+normal <- normal[,colnames(normal) %in% nmetaSamps]
+
+# Combine the meta files
+meta <- rbind(tmeta, nmeta)
+rownames(meta) <- gsub("-", ".", meta$X.1)
+
+# Combine the counts files
+counts <- cbind(tumor, normal)
+
+# Make sure the colnames(counts) are in the same order as rownames(meta)
+sampleOrder <- rownames(meta)
+counts <- counts[,sampleOrder]
+all(colnames(counts) %in% rownames(meta))
+all(colnames(counts) == rownames(meta))
+
+# Create a DESeq2 object
+dds <- DESeqDataSetFromMatrix(countData = counts,
+                              colData = meta,
+                              design = ~ Group)
+
+# Set a reference level (in this case, it doesn't really matter)
+dds$Group <- relevel(dds$Group, ref = "Normal Control")
+
+# Pre-filter for low counts
+smallestGroup <- 6
+keep <- rowSums(counts(dds) >= 10) >= smallestGroup
+dds <- dds[keep,]
+
+# Run DESeq2
+dds <- DESeq(dds)
+
+# Save the .Rds obejct
+saveRDS(dds, file = "Outputs/002_Exploratory_PCA_Outputs/Rds_files/AllTumor_With_ControlNormal_DDS.rds")
+
+# Variance-stabilization transformation
+vsd <- vst(dds)
+
+# Run PCA and return data for custom plotting
+PCA <- plotPCA(vsd, intgroup = "Group", returnData = TRUE) 
+percentVar <- round(100* attr(PCA, "percentVar"))
+PCA$Group <- factor(PCA$Group, levels = c("Normal Control", "Control", "Naproxen", "EPA", "Combo"))
+
+# Set custom colors
+custom_colors <- c("Normal Control" = "#E41A1C", "Control" = "#66C2A5", "Naproxen" = "#FC8D62", "EPA" = "#8DA0CB", "Combo" = "#E78AC3")
+
+# Plot PCA
+finalPlot <- ggplot(PCA, aes(PC1, PC2, fill = Group, color = Group)) +
+  geom_point(size = 3) +
+  stat_ellipse(geom = "polygon", type = "norm", level = 0.90, alpha = 0.10, aes(fill = group)) +
+  geom_text_repel(size = 3, aes(label = name), hjust = 1, vjust = 1.5) +
+  scale_fill_manual(values = custom_colors) +
+  scale_color_manual(values = custom_colors) +
+  xlab(paste0("PC1: ",percentVar[1],"% variance")) +
+  ylab(paste0("PC2: ",percentVar[2],"% variance")) + 
+  labs(color = "",
+       fill = "") +
+  coord_fixed() +
+  theme_bw() +
+  theme(aspect.ratio = 1) +
+  theme(legend.position = "bottom") +
+  theme(text = element_text(family = "Times New Roman"),
+        axis.text.x = element_text(size = 24),
+        axis.title.x = element_text(size = 26, face = "bold"),
+        axis.text.y = element_text(size = 24),
+        axis.title.y = element_text(size = 26, face = "bold"),
+        legend.text = element_text(size = 24),
+        title = element_text(size = 26))
+ggsave("Outputs/002_Exploratory_PCA_Outputs/AllTumor_With_NormalControl_PCA.tiff", finalPlot, width = 10, height = 10, dpi = 300)
 
 
 
