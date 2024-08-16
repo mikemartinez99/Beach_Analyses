@@ -306,6 +306,9 @@ dds <- DESeq(dds)
 # Save the .Rds obejct
 saveRDS(dds, file = "Outputs/002_Exploratory_PCA_Outputs/Rds_files/AllTumor_With_ControlNormal_DDS.rds")
 
+# Unhash this line for plot editing
+dds <- readRDS("Outputs/002_Exploratory_PCA_Outputs/Rds_files/AllTumor_With_ControlNormal_DDS.rds")
+
 # Variance-stabilization transformation
 vsd <- vst(dds)
 
@@ -340,6 +343,6 @@ finalPlot <- ggplot(PCA, aes(PC1, PC2, fill = Group, color = Group)) +
         legend.text = element_text(size = 24),
         title = element_text(size = 26))
 ggsave("Outputs/002_Exploratory_PCA_Outputs/AllTumor_With_NormalControl_PCA.tiff", finalPlot, width = 10, height = 10, dpi = 300)
-
+ggsave("/users/michaelmartinez/Documents/DARTMOUTH/FIGURES/Beach_Exploratory_PCA.png", finalPlot, width = 10, height = 10)
 
 
