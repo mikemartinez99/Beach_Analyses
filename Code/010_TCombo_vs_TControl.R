@@ -137,6 +137,9 @@ write.csv(results005top, file = "Outputs/010_TCombo_vs_TControl_Outputs/DESeq2/T
 
 ################################################################################
 
+# Read in the dds file
+dds <- readRDS("Outputs/010_TCombo_vs_TControl_Outputs/Rds_Files/TCombo_vs_TControl_dds.Rds")
+
 # Variance stabilize transform the data
 vsd <- vst(dds)
 
@@ -163,7 +166,7 @@ plot <- ggplot(PCA, aes(PC1, PC2, fill = Group, color = Group)) +
   theme_bw() +
   theme(aspect.ratio = 1) +
   theme(legend.position = "bottom") +
-  theme(text = element_text(family = "Times New Roman"),
+  theme(#text = element_text(family = "Times New Roman"),
         axis.text.x = element_text(size = 24),
         axis.title.x = element_text(size = 26, face = "bold"),
         axis.text.y = element_text(size = 24),
@@ -171,6 +174,41 @@ plot <- ggplot(PCA, aes(PC1, PC2, fill = Group, color = Group)) +
         legend.text = element_text(size = 24),
         title = element_text(size = 26))
 ggsave("Outputs/010_TCombo_vs_TControl_Outputs/DESeq2/TCombo_vs_TControl_PCA.tiff", plot, width = 10, height = 10, dpi = 300)
+ggsave("/Users/michaelmartinez/Documents/DARTMOUTH/Combo_PCA.png", plot, width = 10, height = 10, dpi = 300)
+
+# PCA analysis
+v <- as.data.frame(assay(vst(dds)))
+v$Symbols <- gsub("^[^-]+-(.*)$", "\\1", rownames(v))
+v_unique <- v[!duplicated(v$Symbols),]
+rownames(v_unique) <- v_unique$Symbols
+v_unique$Symbols <- NULL
+
+p <- pca(v_unique, metadata = colData(dds))
+
+screeplot(p, axisLabSize = 18, titleLabSize = 22)
+plotloadings(p, labSize = 3)
+biplot <- biplot(p, 
+       colby = "Group",
+       showLoadings = TRUE,
+       ntopLoadings = 3,
+       colkey = c("Control" = "#66C2A5", "Combo" = "#E78AC3"),
+       legendPosition = "bottom",
+       legendTitleSize = 0,
+       sizeLoadingsNames = 6,
+       pointSize = 6,
+       encircle = FALSE)
+biplot <- biplot +
+  theme(#text = element_text(family = "Times New Roman"),
+    axis.text.x = element_text(size = 24),
+    axis.title.x = element_text(size = 26, face = "bold"),
+    axis.text.y = element_text(size = 24),
+    axis.title.y = element_text(size = 26, face = "bold"),
+    legend.text = element_text(size = 24),
+    title = element_text(size = 26)) +
+  labs(x = "PC1: 34% variance",
+       y = "PC2: 25% variance")
+  
+ggsave("/users/michaelmartinez/Documents/DARTMOUTH/Combo_Biplot.png", biplot, width = 10, height = 10)
 
 ################################################################################
 
@@ -298,11 +336,11 @@ plotDot <- function(df) {
          color = "P adjust",
          size = "Set Size") +
     theme_bw() +
-    theme(text = element_text(family = "Times New Roman"),
+    theme(#text = element_text(family = "Times New Roman"),
           axis.text.x = element_text(size = 10, angle = 90),
           axis.title.x = element_text(size = 16, face = "bold"),
           axis.text.y = element_text(size = 18),
-          strip.text = element_text(size = 14, face = "bold"),
+          strip.text = element_text(size = 12, face = "bold"),
           title= element_text(size = 20),
           legend.text = element_text(size = 12)) 
   return(plot)
@@ -317,9 +355,11 @@ if (!dir.exists(customGSEAplots)) {
 # Plot dotplots
 GOdotplot <- plotDot(curGO)
 ggsave("Outputs/010_TCombo_vs_TControl_Outputs/CustomFigures/Custom_GSEA/TCombo_vs_TControl_Curated_GO_dotplot.tiff", GOdotplot, width = 12, height = 10, dpi = 300)
+ggsave("/users/michaelmartinez/Documents/DARTMOUTH/Combo_GO.png", GOdotplot, width = 12, height = 10)
 
 KEGGdotplot <- plotDot(curKEGG)
 ggsave("Outputs/010_TCombo_vs_TControl_Outputs/CustomFigures/Custom_GSEA/TCombo_Vs_TControl_Curated_KEGG_dotplot.tiff", KEGGdotplot, width = 12, height = 10, dpi = 300)
+ggsave("/Users/michaelmartinez/Documents/DARTMOUTH/KEGG_dotplot.png", KEGGdotplot, width = 12, height = 10, dpi = 300)
 
 ################################################################################
 
@@ -775,7 +815,7 @@ Volcano <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = Groups)
         axis.text.y = element_text(size = 24),
         axis.title.y = element_text(size = 24, face = "bold")) 
 ggsave("Outputs/010_TCombo_vs_TControl_Outputs/CustomFigures/New_TCombo_vs_TControl_VolcanoPlot.tiff", Volcano, dpi = 300, width = 12, height = 12)
-
+ggsave("/Users/michaelmartinez/Documents/DARTMOUTH/FIGURES/Combo_vs_Control.png", Volcano, width = 12, height = 12)
 
 
 

@@ -279,7 +279,7 @@ res$Symbols <- sub(" ", "", res$Symbols)
 
 # Now make a vector to label the genes we want
 genes_to_label <- c("Mmp7", "Lgr5", "Prss22", "Nox1", "Defa6", "S100a9",
-                    "Vip", "Ghrl", "Myh11", "Ptgis", "Car3", "Scn7a")
+                    "Vip", "Ghrl", "Myh11", "Ptgs2", "Car3", "Scn7a")
 
 # Omit NA values
 res <- na.omit(res)
@@ -298,7 +298,7 @@ Volcano <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = Groups)
   scale_x_continuous(breaks = c(-12, -5, -1, 0, 1, 5, 12),  # Specify only the breaks you want
                      limits = c(-11, 11)) +
   theme_classic() +
-  theme(text = element_text(family = "Times New Roman"),
+  theme(#text = element_text(family = "Times New Roman"),
         legend.position = "bottom",
         legend.text = element_text(size = 18),
         axis.text.x = element_text(size = 24),
@@ -316,6 +316,7 @@ Volcano <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = Groups)
                   color = "black",
                   fontface = 2) 
 ggsave("Outputs/007_TControl_vs_NControl_Outputs/CustomFigures/TControl_vs_NControl_Curated_VolcanoPlot.tiff", Volcano, dpi = 300, width = 12, height = 12)
+ggsave("/Users/michaelmartinez/Documents/DARTMOUTH/NormalVTumor_Volcano.png", Volcano, width = 12, height = 12)
 
 ################################################################################
 
@@ -357,7 +358,7 @@ plotDot <- function(df) {
          color = "P adjust",
          size = "Set Size") +
     theme_bw() +
-    theme(text = element_text(family = "Times New Roman"),
+    theme(#text = element_text(family = "Times New Roman"),
           axis.text.x = element_text(size = 10, angle = 90),
           axis.title.x = element_text(size = 16, face = "bold"),
           axis.text.y = element_text(size = 18),
@@ -379,6 +380,7 @@ ggsave("Outputs/007_TControl_vs_NControl_Outputs/CustomFigures/Custom_GSEA/TCont
 
 KEGGdotplot <- plotDot(curKEGG)
 ggsave("Outputs/007_TControl_vs_NControl_Outputs/CustomFigures/Custom_GSEA/TControl_Vs_NControl_Curated_KEGG_dotplot.tiff", KEGGdotplot, width = 12, height = 10, dpi = 300)
+ggsave("/Users/michaelmartinez/Documents/DARTMOUTH/NormalVTumor_KEGG.png", KEGGdotplot, width = 12, height = 10)
 
 # Function to plot barplot
 plotbar <- function(df) {
