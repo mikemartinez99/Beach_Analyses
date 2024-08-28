@@ -18,6 +18,7 @@ library(ComplexHeatmap)
 library(magick)
 library(circlize)
 library(extrafont)
+library(KEGGREST)
 
 
 # Generate output directory
@@ -749,6 +750,79 @@ draw(immuneScaled)
 dev.off()
 
 ################################################################################
+
+#----- Updates as of August 28th, 2024
+
+#----- Get a list of  genes in each KEGG term
+
+# Retrieve all KEGG pathways for Rattus norvegicus
+pathway_list <- keggList("pathway", "rno")
+pathway_ids <- names(pathway_list)
+
+# Initialize an empty list to store the data
+pathway_genes_list <- list()
+
+# Loop over each pathway and extract the genes
+for (ID in pathway_ids) {
+  
+  # Get pathway information
+  pathway_info <- keggGet(ID)
+  
+  # Extract the genes
+  if (!is.null(pathway_info[[1]]$GENE)) {
+    genes <- pathway_info[[1]]$GENE
+    
+    # Extract gene symbol
+    gene_symbol <- genes[seq(1, length(genes), 2)]
+    
+    # Create a dataframe for this pathway
+    df <- data.frame(
+      pathway_id = ID,
+      pathway_name = pathway_list[ID],
+      gene_symbol = gene_symbol,
+      stringsAsFactors = FALSE
+    )
+    
+    # Add to the list
+    pathway_genes_list[[ID]] <- df
+  }
+}
+
+# Combine all the dataframes into one big dataframe
+pathway_genes_df <- do.call(rbind, pathway_genes_list)
+
+# Convert the ENTREZ ID to gene symbols
+pathway_genes_df$Symbols <- mapIds(org.Rn.eg.db,
+                                   column = "SYMBOL",
+                                   keys = pathway_genes_df$gene_symbol,
+                                   keytype = "ENTREZID",
+                                   multiVals = "first")
+
+# Remove any genes that are NA
+pathway_genes_df <- na.omit(pathway_genes_df)
+
+# Remove ENTREZID column
+pathway_genes_df$gene_symbol <- NULL
+
+# Collapse unique pathways
+collapsed_KEGG_df <- pathway_genes_df %>%
+  group_by(pathway_id, pathway_name) %>%
+  summarise(genes = paste(Symbols, collapse = "/")) %>%
+  ungroup()
+
+# Clean up the pathway names
+collapsed_KEGG_df$pathway_name <- gsub(" - Rattus norvegicus \\(rat\\)", "", collapsed_KEGG_df$pathway_name)
+
+# Count the number of genes in each pathway
+collapsed_KEGG_df <- collapsed_KEGG_df %>%
+  mutate(gene_count = str_count(genes, "/") + 1)
+
+# Re-order the columns
+collapsed_KEGG_df <- collapsed_KEGG_df[,c(1,2,4,3)]
+
+# Save this dataframe as a csv
+write.csv(collapsed_KEGG_df, file = "Outputs/014_TIfetroban_vs_All_Outputs/RNO_KEGG_DATABASE_GENES.csv")
+
 
 
 
