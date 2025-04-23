@@ -1,11 +1,16 @@
+# PREVENT/Ifetroban Study
 
-# PREVENT: Analyses for Dr. Ryan Beach - UConn Health Center
-Code for RNA-Seq analyses
+**Lab:** Rosenberg (Ryan Beach)
+
+**Author:** Mike Martinez
+
+**Description:** Code for RNA-Seq analyses of all PREVENT samples and Ifetroban samples
 
 # Table of Contents
 - [Abstract](#abstract)
 - [Code](#code)
 - [Usage](#usage)
+- [Files](#files)
 
 ## Abstract
 
@@ -60,6 +65,21 @@ git clone https://github.com/mikemartinez99/Beach_Analyses
 cd Beach_Analyses
 
 ```
+
+## Files
+
+The following data files are stored in the [data files section](https://github.com/mikemartinez99/Beach_Analyses/tree/main/Data_Files) and will be copied to your working directory upon repo cloning. 
+
+|Folder|Purpose|Files in folder|
+|------|-------|---------------|
+|`Filtered_Normal_Counts`|Counts for the curated set of normal samples used in downstream analysis|`Final_Filtered_Normal_Counts.csv`- Contains the counts `Final_Filtered_Normal_Metadata.csv` - Contains the associated metadata|
+|`Filtered_Tumor_Counts`|Counts for the curated set of tumor samples used in downstream analysis|`Final_Filtered_Tumor_Counts.csv` - Contains the counts `Final_Filtered_Tumor_Metadata.csv` - Contains the associated metadata|
+|`Iftroban_Study`|Contains Ifetroban counts, metadata, and curated genelists for heatmaps|`Custom_Heatmap_Gene` - A folder containing lists of genes for curated fibroblast and immune gene sets `Log10_TPM_Values` - A folder contains log10 transformed TPM values for heatmap plotting `IfetrobanStudy_MasterCounts.csv` - Contains counts of ifetreoban samples `IfetrobanStudy_MasterMeta.csv` - Contains associated metadata|
+|`MASTER_COUNTS.CSV`|A counts file containing all samples contained in this study including samples not included in analysis|`PREVENT_MASTER_COUNTS.CSV`|
+|`TCombo_vs_TCOntrol_Curated`|Contains curated files for GSEA and heatmap figures for tumor combo vs tumor control comparison|`Curated_GSEA` - A folder containing curated GSEA gene sets for plotting `Custom_Heatmap_Gene` - A folder containing curated genes for heatmap plotting `Log10_TPM_Values` - A folder containing log10 transformed TPMs for heatmap plotting|
+|`TControl_vs_NControl_Curated`|Contains curated GSEA gene set files for the Tumor control vs normal control comparison|`Curated_GSEA` - A folder containing curated GSEA gene sets for plotting|
+
+
 
 
 
