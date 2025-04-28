@@ -55,7 +55,7 @@ brew install git
 
 **Step 4: Navigate to working directory**
 ```shell
-cd <some_directory>
+cd <sreplace/with/your/desired/working/directory>
 ```
 
 **Step 4: Clone github repo** 
